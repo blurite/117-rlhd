@@ -2818,15 +2818,6 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 	}
 
 	@Subscribe
-	public void onGameObjectChanged(GameObjectChanged gameObjectChanged)
-	{
-		GameObject previous = gameObjectChanged.getPrevious();
-		GameObject gameObject = gameObjectChanged.getGameObject();
-		lightManager.removeObjectLight(previous);
-		lightManager.addObjectLight(gameObject, gameObjectChanged.getTile().getRenderLevel(), gameObject.sizeX(), gameObject.sizeY(), gameObject.getOrientation().getAngle());
-	}
-
-	@Subscribe
 	public void onGameObjectDespawned(GameObjectDespawned gameObjectDespawned)
 	{
 		GameObject gameObject = gameObjectDespawned.getGameObject();
@@ -2838,15 +2829,6 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 	{
 		WallObject wallObject = wallObjectSpawned.getWallObject();
 		lightManager.addObjectLight(wallObject, wallObjectSpawned.getTile().getRenderLevel(), 1, 1, wallObject.getOrientationA());
-	}
-
-	@Subscribe
-	public void onWallObjectChanged(WallObjectChanged wallObjectChanged)
-	{
-		WallObject previous = wallObjectChanged.getPrevious();
-		WallObject wallObject = wallObjectChanged.getWallObject();
-		lightManager.removeObjectLight(previous);
-		lightManager.addObjectLight(wallObject, wallObjectChanged.getTile().getRenderLevel(), 1, 1, wallObject.getOrientationA());
 	}
 
 	@Subscribe
@@ -2864,15 +2846,6 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 	}
 
 	@Subscribe
-	public void onDecorativeObjectChanged(DecorativeObjectChanged decorativeObjectChanged)
-	{
-		DecorativeObject previous = decorativeObjectChanged.getPrevious();
-		DecorativeObject decorativeObject = decorativeObjectChanged.getDecorativeObject();
-		lightManager.removeObjectLight(previous);
-		lightManager.addObjectLight(decorativeObject, decorativeObjectChanged.getTile().getRenderLevel());
-	}
-
-	@Subscribe
 	public void onDecorativeObjectDespawned(DecorativeObjectDespawned decorativeObjectDespawned)
 	{
 		DecorativeObject decorativeObject = decorativeObjectDespawned.getDecorativeObject();
@@ -2884,15 +2857,6 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 	{
 		GroundObject groundObject = groundObjectSpawned.getGroundObject();
 		lightManager.addObjectLight(groundObject, groundObjectSpawned.getTile().getRenderLevel());
-	}
-
-	@Subscribe
-	public void onGroundObjectChanged(GroundObjectChanged groundObjectChanged)
-	{
-		GroundObject previous = groundObjectChanged.getPrevious();
-		GroundObject groundObject = groundObjectChanged.getGroundObject();
-		lightManager.removeObjectLight(previous);
-		lightManager.addObjectLight(groundObject, groundObjectChanged.getTile().getRenderLevel());
 	}
 
 	@Subscribe
