@@ -364,7 +364,7 @@ public class LightManager
 			light.belowFloor = false;
 			light.aboveFloor = false;
 
-			if (tileX < Perspective.SCENE_SIZE && tileY < Perspective.SCENE_SIZE && tileX >= 0 && tileY >= 0)
+			if (tileX < Perspective.SCENE_SIZE && tileY < Perspective.SCENE_SIZE && tileX >= 0 && tileY >= 0 && tileZ >= 0)
 			{
 				Tile aboveTile = tileZ < 3 ? client.getScene().getTiles()[tileZ + 1][tileX][tileY] : null;
 
