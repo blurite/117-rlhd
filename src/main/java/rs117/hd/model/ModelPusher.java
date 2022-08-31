@@ -267,7 +267,8 @@ public class ModelPusher
             modelData = new ModelData()
                 .setColors(getColorsForModel(renderable, model, objectProperties, objectType, tileX, tileY, tileZ, faceCount))
                 .setFaceCount(model.getFaceCount());
-            modelCache.put(hash, modelData);
+            if (model.getFaceTransparencies() == null)
+            	modelCache.put(hash, modelData);
         }
 
         return modelData;

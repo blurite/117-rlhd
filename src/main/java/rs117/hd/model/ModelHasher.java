@@ -11,7 +11,6 @@ public class ModelHasher {
     private int faceColors1Hash;
     private int faceColors2Hash;
     private int faceColors3Hash;
-    private int faceTransparenciesHash;
     private int faceTexturesHash;
     private int faceTexturesUvHash;
 
@@ -20,7 +19,6 @@ public class ModelHasher {
         this.faceColors1Hash = Arrays.hashCode(model.getFaceColors1());
         this.faceColors2Hash = Arrays.hashCode(model.getFaceColors2());
         this.faceColors3Hash = Arrays.hashCode(model.getFaceColors3());
-        this.faceTransparenciesHash = Arrays.hashCode(model.getFaceTransparencies());
         this.faceTexturesHash = Arrays.hashCode(model.getFaceTextures());
         this.faceTexturesUvHash = Arrays.hashCode(model.getFaceTextureUVCoordinates());
     }
@@ -30,7 +28,6 @@ public class ModelHasher {
                 this.faceColors1Hash,
                 this.faceColors2Hash,
                 this.faceColors3Hash,
-                this.faceTransparenciesHash,
                 this.faceTexturesHash,
                 this.faceTexturesUvHash,
                 this.model.getOverrideAmount(),
