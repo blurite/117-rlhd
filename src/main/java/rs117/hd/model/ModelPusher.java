@@ -62,7 +62,7 @@ public class ModelPusher
     private final static short[] modelColors = new short[HdPlugin.MAX_TRIANGLE * 4];
     private final static ModelData tempModelData = new ModelData();
     
-    private final Map<Integer, ModelData> modelCache = new ModelCache(4096);
+    private final Map<Integer, ModelData> modelCache = new ModelCache(512);
 
     public void clearModelCache() {
         modelCache.clear();
