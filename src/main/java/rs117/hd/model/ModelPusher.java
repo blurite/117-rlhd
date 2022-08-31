@@ -458,7 +458,7 @@ public class ModelPusher
             }
         }
 
-        int packedAlphaPriority = getPackedAlphaPriority(model, face) >>> 16;
+        int packedAlphaPriority = getPackedAlphaPriority(model, face);
 
         if (hdPlugin.configTzhaarHD && objectProperties != null && objectProperties.getTzHaarRecolorType() != TzHaarRecolorType.NONE) {
             int[][] tzHaarRecolored = proceduralGenerator.recolorTzHaar(objectProperties, yVertices[triA], yVertices[triB], yVertices[triC], packedAlphaPriority, objectType, color1H, color1S, color1L, color2H, color2S, color2L, color3H, color3S, color3L);
@@ -473,6 +473,8 @@ public class ModelPusher
             color3L = tzHaarRecolored[2][2];
             packedAlphaPriority = tzHaarRecolored[3][0];
         }
+
+        packedAlphaPriority >>= 16;
 
         color1L = Ints.constrainToRange(color1L, 0, maxBrightness);
         color2L = Ints.constrainToRange(color2L, 0, maxBrightness);
