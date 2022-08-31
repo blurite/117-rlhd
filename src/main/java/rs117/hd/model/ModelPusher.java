@@ -55,10 +55,11 @@ public class ModelPusher
     private final static float[] zeroFloats = new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     private final static int[] twoInts = new int[2];
     private final static int[] fourInts = new int[4];
+    private static final short[] fourShorts = new short[4];
     private final static int[] eightInts = new int[8];
     private final static int[] twelveInts = new int[12];
     private final static float[] twelveFloats = new float[12];
-    private final static int[] modelColors = new int[HdPlugin.MAX_TRIANGLE * 4];
+    private final static short[] modelColors = new short[HdPlugin.MAX_TRIANGLE * 4];
     private final static ModelData tempModelData = new ModelData();
     
     private final Map<Integer, ModelData> modelCache = new ModelCache(4096);
@@ -106,18 +107,20 @@ public class ModelPusher
         final int triB = model.getFaceIndices2()[face];
         final int triC = model.getFaceIndices3()[face];
 
+        int packedAlphaPri = modelData.getColorForFace(face, 3) << 16;
+
         twelveInts[0] = xVertices[triA];
         twelveInts[1] = yVertices[triA];
         twelveInts[2] = zVertices[triA];
-        twelveInts[3] = modelData.getColorForFace(face, 3) | modelData.getColorForFace(face, 0);
+        twelveInts[3] = packedAlphaPri | modelData.getColorForFace(face, 0);
         twelveInts[4] = xVertices[triB];
         twelveInts[5] = yVertices[triB];
         twelveInts[6] = zVertices[triB];
-        twelveInts[7] = modelData.getColorForFace(face, 3) | modelData.getColorForFace(face, 1);
+        twelveInts[7] = packedAlphaPri | modelData.getColorForFace(face, 1);
         twelveInts[8] = xVertices[triC];
         twelveInts[9] = yVertices[triC];
         twelveInts[10] = zVertices[triC];
-        twelveInts[11] = modelData.getColorForFace(face, 3) | modelData.getColorForFace(face, 2);
+        twelveInts[11] = packedAlphaPri | modelData.getColorForFace(face, 2);
 
         return twelveInts;
     }
@@ -261,14 +264,16 @@ public class ModelPusher
         ModelData modelData = modelCache.get(hash);
         if (modelData == null || modelData.getFaceCount() != model.getFaceCount()) {
             // get new data if there was no cache or if we detected an exception causing hash collision
-            modelData = new ModelData().setColors(getColorsForModel(renderable, model, objectProperties, objectType, tileX, tileY, tileZ, faceCount)).setFaceCount(model.getFaceCount());
+            modelData = new ModelData()
+                .setColors(getColorsForModel(renderable, model, objectProperties, objectType, tileX, tileY, tileZ, faceCount))
+                .setFaceCount(model.getFaceCount());
             modelCache.put(hash, modelData);
         }
 
         return modelData;
     }
 
-    private int[] getColorsForModel(Renderable renderable, Model model, ObjectProperties objectProperties, ObjectType objectType, int tileX, int tileY, int tileZ, int faceCount) {
+    private short[] getColorsForModel(Renderable renderable, Model model, ObjectProperties objectProperties, ObjectType objectType, int tileX, int tileY, int tileZ, int faceCount) {
         for (int face = 0; face < faceCount; face++) {
             System.arraycopy(getColorsForFace(renderable, model, objectProperties, objectType, tileX, tileY, tileZ, face), 0, modelColors, face * 4, 4);
         }
@@ -276,24 +281,24 @@ public class ModelPusher
         return Arrays.copyOfRange(modelColors, 0, faceCount * 4);
     }
 
-    private int[] removeBakedGroundShading(int face, int triA, int triB, int triC, byte[] faceTransparencies, short[] faceTextures, int[] yVertices) {
+    private short[] removeBakedGroundShading(int face, int triA, int triB, int triC, byte[] faceTransparencies, short[] faceTextures, int[] yVertices) {
         if (faceTransparencies != null && (faceTextures == null || faceTextures[face] == -1) && (faceTransparencies[face] & 0xFF) > 100) {
             int aHeight = yVertices[triA];
             int bHeight = yVertices[triB];
             int cHeight = yVertices[triC];
             if (aHeight >= -8 && aHeight == bHeight && aHeight == cHeight) {
-                fourInts[0] = 0;
-                fourInts[1] = 0;
-                fourInts[2] = 0;
-                fourInts[3] = 0xFF << 24;
-                return fourInts;
+                fourShorts[0] = 0;
+                fourShorts[1] = 0;
+                fourShorts[2] = 0;
+                fourShorts[3] = (short)(0xFF << 8);
+                return fourShorts;
             }
         }
 
         return null;
     }
 
-    private int[] getColorsForFace(Renderable renderable, Model model, ObjectProperties objectProperties, ObjectType objectType, int tileX, int tileY, int tileZ, int face) {
+    private short[] getColorsForFace(Renderable renderable, Model model, ObjectProperties objectProperties, ObjectType objectType, int tileX, int tileY, int tileZ, int face) {
         int color1 = model.getFaceColors1()[face];
         int color2 = model.getFaceColors2()[face];
         int color3 = model.getFaceColors3()[face];
@@ -319,7 +324,7 @@ public class ModelPusher
             GraphicsObject graphicsObject = renderable instanceof GraphicsObject ? (GraphicsObject) renderable : null;
 
             if ((npc != null && BakedModels.NPCS.contains(npc.getId())) || (graphicsObject != null && BakedModels.OBJECTS.contains(graphicsObject.getId())) || (player != null &&  player.getPlayerComposition().getEquipmentId(KitType.WEAPON) == ItemID.MAGIC_CARPET)) {
-                int[] transparency = removeBakedGroundShading(face, triA, triB, triC, faceTransparencies, faceTextures, yVertices);
+                short[] transparency = removeBakedGroundShading(face, triA, triB, triC, faceTransparencies, faceTextures, yVertices);
                 if (transparency != null) {
                     return transparency;
                 }
@@ -327,11 +332,11 @@ public class ModelPusher
         }
 
         if (color3 == -2) {
-            fourInts[0] = 0;
-            fourInts[1] = 0;
-            fourInts[2] = 0;
-            fourInts[3] = 0xFF << 24;
-            return fourInts;
+            fourShorts[0] = 0;
+            fourShorts[1] = 0;
+            fourShorts[2] = 0;
+            fourShorts[3] = (short)(0xFF << 8);
+            return fourShorts;
         } else if (color3 == -1) {
             color2 = color3 = color1;
         } else if ((faceTextures == null || faceTextures[face] == -1) && overrideAmount > 0) {
@@ -453,7 +458,7 @@ public class ModelPusher
             }
         }
 
-        int packedAlphaPriority = getPackedAlphaPriority(model, face);
+        int packedAlphaPriority = getPackedAlphaPriority(model, face) >>> 16;
 
         if (hdPlugin.configTzhaarHD && objectProperties != null && objectProperties.getTzHaarRecolorType() != TzHaarRecolorType.NONE) {
             int[][] tzHaarRecolored = proceduralGenerator.recolorTzHaar(objectProperties, yVertices[triA], yVertices[triB], yVertices[triC], packedAlphaPriority, objectType, color1H, color1S, color1L, color2H, color2S, color2L, color3H, color3S, color3L);
@@ -477,12 +482,12 @@ public class ModelPusher
         color2 = (color2H << 3 | color2S) << 7 | color2L;
         color3 = (color3H << 3 | color3S) << 7 | color3L;
 
-        fourInts[0] = color1;
-        fourInts[1] = color2;
-        fourInts[2] = color3;
-        fourInts[3] = packedAlphaPriority;
+        fourShorts[0] = (short) color1;
+        fourShorts[1] = (short) color2;
+        fourShorts[2] = (short) color3;
+        fourShorts[3] = (short) packedAlphaPriority;
 
-        return fourInts;
+        return fourShorts;
     }
 
     private static int interpolateHSL(int hsl, byte hue2, byte sat2, byte lum2, byte lerp) {

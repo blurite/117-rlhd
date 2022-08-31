@@ -2,7 +2,7 @@ package rs117.hd.model;
 
 class ModelData
 {
-    private int[] colors;
+    private short[] colors;
     private int faceCount;
 
     public int getFaceCount() {
@@ -14,7 +14,7 @@ class ModelData
         return this;
     }
 
-    public ModelData setColors(int[] colors) {
+    public ModelData setColors(short[] colors) {
         this.colors = colors;
         return this;
     }
