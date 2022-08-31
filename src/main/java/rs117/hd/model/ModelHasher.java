@@ -30,7 +30,6 @@ public class ModelHasher {
                 this.faceColors1Hash,
                 this.faceColors2Hash,
                 this.faceColors3Hash,
-                this.faceTransparenciesHash,
                 this.faceTexturesHash,
                 this.faceTexturesUvHash,
                 this.model.getOverrideAmount(),

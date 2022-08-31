@@ -22,4 +22,8 @@ class ModelData
     public int getColorForFace(int face, int index) {
         return this.colors[(face * 4) + index];
     }
+
+    public void setColorForFace(int face, int index, int color) {
+        this.colors[(face * 4) + index] = color;
+    }
 }

@@ -257,12 +257,23 @@ public class ModelPusher
             return tempModelData;
         }
 
-
+        boolean didCache = true;
         ModelData modelData = modelCache.get(hash);
         if (modelData == null || modelData.getFaceCount() != model.getFaceCount()) {
+            didCache = false;
+
             // get new data if there was no cache or if we detected an exception causing hash collision
             modelData = new ModelData().setColors(getColorsForModel(renderable, model, objectProperties, objectType, tileX, tileY, tileZ, faceCount)).setFaceCount(model.getFaceCount());
             modelCache.put(hash, modelData);
+        }
+
+        if (didCache) {
+            // to prevent bloat/churn the cache doesn't properly account for transparency
+            // so we restore it here
+
+            for (int face = 0; face < modelData.getFaceCount(); face++) {
+                modelData.setColorForFace(face, 3, getPackedAlphaPriority(model, face));
+            }
         }
 
         return modelData;
