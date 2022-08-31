@@ -20,6 +20,6 @@ class ModelData
     }
 
     public int getColorForFace(int face, int index) {
-        return this.colors[(face * 4) + index];
+        return this.colors[(face * 4) + index] & 0xffff;
     }
 }
