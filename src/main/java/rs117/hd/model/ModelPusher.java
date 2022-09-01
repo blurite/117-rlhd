@@ -255,7 +255,7 @@ public class ModelPusher
     }
 
     private ModelData getCachedModelData(Renderable renderable, Model model, ObjectProperties objectProperties, ObjectType objectType, int tileX, int tileY, int tileZ, int faceCount, boolean noCache, int hash) {
-        if (noCache) {
+        if (noCache || model.getFaceTransparencies() != null) {
             tempModelData.setColors(getColorsForModel(renderable, model, objectProperties, objectType, tileX, tileY, tileZ, faceCount));
             return tempModelData;
         }
@@ -267,8 +267,7 @@ public class ModelPusher
             modelData = new ModelData()
                 .setColors(getColorsForModel(renderable, model, objectProperties, objectType, tileX, tileY, tileZ, faceCount))
                 .setFaceCount(model.getFaceCount());
-            if (model.getFaceTransparencies() == null)
-            	modelCache.put(hash, modelData);
+            modelCache.put(hash, modelData);
         }
 
         return modelData;
