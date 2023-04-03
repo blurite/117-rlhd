@@ -31,7 +31,7 @@ public class ProgressManager extends ResponseBody {
     private final ProgressListener progressListener;
     private BufferedSource bufferedSource;
 
-    public ProgressManager(ResponseBody responseBody, ProgressListener progressListener) {
+    ProgressManager(ResponseBody responseBody, ProgressListener progressListener) {
         this.responseBody = responseBody;
         this.progressListener = progressListener;
     }
