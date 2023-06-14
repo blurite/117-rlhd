@@ -1,5 +1,6 @@
 package rs117.hd.model;
 
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.FloatBuffer;
@@ -77,24 +78,24 @@ public class ModelCache {
         this.uvDataCache.put(hash, data);
     }
 
+	@Nullable
     public IntBuffer takeIntBuffer(int capacity) {
-        if (this.bufferPool.isEmpty()) {
-            if(!this.makeRoom()) {
-                log.error("failed to make room for int buffer");
-            }
-        }
-
-        return this.bufferPool.takeIntBuffer(capacity);
+		IntBuffer buffer = this.bufferPool.takeIntBuffer(capacity);
+		if (buffer == null) {
+			makeRoom();
+			buffer = this.bufferPool.takeIntBuffer(capacity);
+		}
+		return buffer;
     }
 
+	@Nullable
     public FloatBuffer takeFloatBuffer(int capacity) {
-        if (this.bufferPool.isEmpty()) {
-            if(!this.makeRoom()) {
-                log.error("failed to make room for float buffer");
-            }
-        }
-
-        return this.bufferPool.takeFloatBuffer(capacity);
+		FloatBuffer buffer = this.bufferPool.takeFloatBuffer(capacity);
+		if (buffer == null) {
+			makeRoom();
+			buffer = this.bufferPool.takeFloatBuffer(capacity);
+		}
+		return buffer;
     }
 
     // a more idealized way to balance the caches might look like:

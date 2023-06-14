@@ -73,16 +73,7 @@ public class ModelPusher {
 	// the minimum amount by which each color will be lightened
 	private static final int BASE_LIGHTEN = 10;
 
-	// constant array for zeroed out face data
-	private static final int[] INT_ZEROS = new int[12];
-	private static final float[] FLOAT_ZEROS = new float[12];
-
 	private ModelCache modelCache;
-
-//    private int pushes = 0;
-//    private int vertexdatahits = 0;
-//    private int normaldatahits = 0;
-//    private int uvdatahits = 0;
 
 	public void startUp() {
 		if (Material.values().length - 1 >= MAX_MATERIAL_COUNT) {
@@ -91,7 +82,7 @@ public class ModelPusher {
 		}
 
         if (config.enableModelCaching()) {
-            final int size = config.modelCacheSizeMiB();
+			int size = config.modelCacheSizeMiB();
             try {
                 modelCache = new ModelCache(size);
             } catch (Throwable err) {
@@ -149,25 +140,6 @@ public class ModelPusher {
         }
     }
 
-//    public void printStats() {
-//        StringBuilder stats = new StringBuilder();
-//        stats.append("\nModel pusher cache stats:\n");
-////        stats.append("Vertex cache hit ratio: ").append((float)vertexDataHits/pushes*100).append("%\n");
-////        stats.append("Normal cache hit ratio: ").append((float)normalDataHits/pushes*100).append("%\n");
-////        stats.append("UV cache hit ratio: ").append((float)uvDataHits/pushes*100).append("%\n");
-//        stats.append(vertexDataCache.size()).append(" vertex datas consuming ").append(vertexDataCache.getBytesConsumed()).append(" bytes\n");
-//        stats.append(normalDataCache.size()).append(" normal datas consuming ").append(normalDataCache.getBytesConsumed()).append(" bytes\n");
-//        stats.append(uvDataCache.size()).append(" uv datas consuming ").append(uvDataCache.getBytesConsumed()).append(" bytes\n");
-//        stats.append("totally consuming ").append(this.bytesCached).append(" bytes\n");
-//
-//        log.debug(stats.toString());
-////
-//        vertexDataHits = 0;
-//        normalDataHits = 0;
-//        uvDataHits = 0;
-//        pushes = 0;
-//    }
-
 	/**
 	 * Pushes model data to staging buffers in the provided {@link SceneContext}, and writes the pushed number of
 	 * vertices and UVs to {@link SceneContext#modelPusherResults}.
@@ -190,7 +162,6 @@ public class ModelPusher {
             shouldCache = false;
         }
 
-//        pushes++;
         final int faceCount = Math.min(model.getFaceCount(), HdPlugin.MAX_TRIANGLE);
         final int bufferSize = faceCount * DATUM_PER_FACE;
         int vertexLength = 0;
@@ -230,11 +201,12 @@ public class ModelPusher {
         int uvDataCacheHash = 0;
 
         if (shouldCache) {
+            assert client.isClientThread() : "Model caching isn't thread-safe";
+
             vertexDataCacheHash = modelHasher.calculateVertexCacheHash();
             IntBuffer vertexData = this.modelCache.getVertexData(vertexDataCacheHash);
             foundCachedVertexData = vertexData != null && vertexData.remaining() == bufferSize;
             if (foundCachedVertexData) {
-//              vertexDataHits++;
                 vertexLength = faceCount * 3;
                 sceneContext.stagingBufferVertices.put(vertexData);
                 vertexData.rewind();
@@ -244,7 +216,6 @@ public class ModelPusher {
             FloatBuffer normalData = this.modelCache.getNormalData(normalDataCacheHash);
             foundCachedNormalData = normalData != null && normalData.remaining() == bufferSize;
             if (foundCachedNormalData) {
-//              normalDataHits++;
                 sceneContext.stagingBufferNormals.put(normalData);
                 normalData.rewind();
             }
@@ -254,7 +225,6 @@ public class ModelPusher {
                 FloatBuffer uvData = this.modelCache.getUvData(uvDataCacheHash);
                 foundCachedUvData = uvData != null && uvData.remaining() == bufferSize;
                 if (foundCachedUvData) {
-//                  uvDataHits++;
                     uvLength = faceCount * 3;
                     sceneContext.stagingBufferUvs.put(uvData);
                     uvData.rewind();
@@ -283,7 +253,6 @@ public class ModelPusher {
 			if (shouldCacheVertexData) {
 				fullVertexData = this.modelCache.takeIntBuffer(bufferSize);
 				if (fullVertexData == null) {
-					log.error("failed to grab vertex buffer");
 					shouldCacheVertexData = false;
 				}
 			}
@@ -291,7 +260,6 @@ public class ModelPusher {
 			if (shouldCacheNormalData) {
 				fullNormalData = this.modelCache.takeFloatBuffer(bufferSize);
 				if (fullNormalData == null) {
-					log.error("failed to grab normal buffer");
 					shouldCacheNormalData = false;
 				}
 			}
@@ -299,7 +267,6 @@ public class ModelPusher {
 			if (shouldCacheUvData) {
 				fullUvData = this.modelCache.takeFloatBuffer(bufferSize);
 				if (fullUvData == null) {
-					log.error("failed to grab uv buffer");
 					shouldCacheUvData = false;
 				}
 			}
@@ -381,7 +348,6 @@ public class ModelPusher {
 		int terrainData = SceneUploader.packTerrainData(false, 0, WaterType.NONE, 0);
 		if (terrainData == 0 && (modelOverride.flatNormals || model.getFaceColors3()[face] == -1)) {
 			Arrays.fill(sceneContext.modelFaceNormals, 0);
-//			return FLOAT_ZEROS;
 			return;
 		}
 
@@ -404,7 +370,6 @@ public class ModelPusher {
         sceneContext.modelFaceNormals[9] = yVertexNormals[triC];
         sceneContext.modelFaceNormals[10] = zVertexNormals[triC];
         sceneContext.modelFaceNormals[11] = terrainData;
-//		return sceneContext.modelFaceNormals;
     }
 
     public int packMaterialData(Material material, @NonNull ModelOverride modelOverride, UvType uvType, boolean isOverlay) {
@@ -475,7 +440,6 @@ public class ModelPusher {
         if (color3 == -2) {
 			// Zero out vertex positions to effectively hide the face
 			Arrays.fill(sceneContext.modelFaceVertices, 0);
-//            return INT_ZEROS;
 			return;
         } else if (color3 == -1) {
             color2 = color3 = color1;

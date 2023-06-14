@@ -605,22 +605,27 @@ public interface HdPluginConfig extends Config
 	)
 	default boolean enableModelCaching() { return true; }
 
-	String KEY_MODEL_CACHE_SIZE = "modelCacheSizeMiB";
+	String KEY_MODEL_CACHE_SIZE = "modelCacheSizeMiBv2";
 	@Range(
-		min = 256,
-		max = 16384
+		min = 64,
+		max = 8192
 	)
 	@ConfigItem(
 		keyName = KEY_MODEL_CACHE_SIZE,
 		name = "Model cache size (MiB)",
 		description =
 			"Size of the model cache in mebibytes (slightly more than megabytes).<br>" +
-			"Generally, 2048 MiB is plenty, with diminishing returns the higher you go.<br>" +
-			"Minimum=256 MiB, maximum=16384 MiB",
+			"Generally, 512 MiB is plenty, with diminishing returns the higher you go.<br>" +
+			"Minimum=64 MiB, maximum=8192 MiB",
 		position = 3,
 		section = modelCachingSettings
 	)
 	default int modelCacheSizeMiB() {
+		return modelCacheSizeMiBv1() / 4;
+	}
+	@ConfigItem(keyName = "modelCacheSizeMiB", hidden = true, name = "", description = "")
+	default int modelCacheSizeMiBv1()
+	{
 		return 2048;
 	}
 
