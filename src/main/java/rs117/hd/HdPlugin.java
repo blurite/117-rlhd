@@ -2484,11 +2484,18 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 			return;
 		}
 
-		Model model = renderable instanceof Model ? (Model) renderable : renderable.getModel();
-		if (model == null || model.getFaceCount() == 0) {
-			// skip models with zero faces
-			// this does seem to happen sometimes (mostly during loading)
-			// should save some CPU cycles here and there
+		Model model;
+		try {
+			// getModel may throw an exception from vanilla client code
+			model = renderable instanceof Model ? (Model) renderable : renderable.getModel();
+			if (model == null || model.getFaceCount() == 0) {
+				// skip models with zero faces
+				// this does seem to happen sometimes (mostly during loading)
+				// should save some CPU cycles here and there
+				return;
+			}
+		} catch (Exception ex) {
+			// Vanilla happens to handle exceptions thrown here gracefully, but we handle them explicitly anyway
 			return;
 		}
 
