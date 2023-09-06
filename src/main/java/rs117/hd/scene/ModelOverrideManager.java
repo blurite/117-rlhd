@@ -1,9 +1,5 @@
 package rs117.hd.scene;
 
-import java.io.IOException;
-import java.util.HashMap;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -13,11 +9,12 @@ import net.runelite.client.callback.ClientThread;
 import rs117.hd.HdPlugin;
 import rs117.hd.model.ModelPusher;
 import rs117.hd.scene.model_overrides.ModelOverride;
-import rs117.hd.utils.AABB;
-import rs117.hd.utils.HDUtils;
-import rs117.hd.utils.ModelHash;
-import rs117.hd.utils.Props;
-import rs117.hd.utils.ResourcePath;
+import rs117.hd.utils.*;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.io.IOException;
+import java.util.HashMap;
 
 import static rs117.hd.utils.ResourcePath.path;
 
@@ -59,11 +56,11 @@ public class ModelOverrideManager {
                         addEntry(ModelHash.packUuid(objectId, ModelHash.TYPE_OBJECT), override);
                 }
 
-				clientThread.invoke(() -> {
-					modelPusher.clearModelCache();
-					if (client.getGameState() == GameState.LOGGED_IN)
-						plugin.uploadScene();
-				});
+                clientThread.invoke(() -> {
+                    modelPusher.clearModelCache();
+                    if (client.getGameState() == GameState.LOGGED_IN)
+                        client.setGameState(GameState.LOADING);
+                });
 
                 log.debug("Loaded {} model overrides", modelOverrides.size());
             } catch (IOException ex) {

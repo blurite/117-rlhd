@@ -584,7 +584,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 				initShadowMapFbo();
 
 				client.setDrawCallbacks(this);
-				client.setGpu(true);
+				client.setGpuFlags(DrawCallbacks.GPU | DrawCallbacks.NORMALS);
 				textureManager.startUp();
 				// force rebuild of main buffer provider to enable alpha channel
 				client.resizeCanvas();
@@ -602,9 +602,9 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 
 				running = true;
 
-				if (client.getGameState() == GameState.LOGGED_IN)
-				{
-					uploadScene();
+				if (client.getGameState() == GameState.LOGGED_IN) {
+					// We need to force the client to reload the scene if GPU flags have changed
+					client.setGameState(GameState.LOADING);
 				}
 
 				checkGLErrors();
@@ -632,7 +632,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 		{
 			eventBus.unregister(lightManager);
 
-			client.setGpu(false);
+			client.setGpuFlags(0);
 			client.setDrawCallbacks(null);
 			client.setUnlockedFps(false);
 			modelPusher.shutDown();
