@@ -363,6 +363,11 @@ public class ModelPusher {
 		final int[] yVertexNormals = model.getVertexNormalsY();
 		final int[] zVertexNormals = model.getVertexNormalsZ();
 
+		if (xVertexNormals == null || yVertexNormals == null || zVertexNormals == null) {
+			Arrays.fill(sceneContext.modelFaceNormals, 0);
+			return;
+		}
+
 		sceneContext.modelFaceNormals[0] = xVertexNormals[triA];
 		sceneContext.modelFaceNormals[1] = yVertexNormals[triA];
 		sceneContext.modelFaceNormals[2] = zVertexNormals[triA];
