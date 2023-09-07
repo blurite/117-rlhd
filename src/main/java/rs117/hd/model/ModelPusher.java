@@ -470,7 +470,7 @@ public class ModelPusher {
 		// direction, and some models even have baked lighting built into the model itself. In some cases, increasing
 		// brightness in this way leads to overly bright colors, so we are forced to cap brightness at a relatively
 		// low value for it to look acceptable in most cases.
-		if (modelOverride.flatNormals) {
+		if (modelOverride.flatNormals || xVertexNormals == null || yVertexNormals == null || zVertexNormals == null) {
 			float[] T = {
 				xVertices[triA] - xVertices[triB],
 				yVertices[triA] - yVertices[triB],
