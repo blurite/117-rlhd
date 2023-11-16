@@ -40,6 +40,8 @@ void add_face_prio_distance(
   uint localId, struct ModelInfo minfo, int4 thisrvA, int4 thisrvB, int4 thisrvC, int thisPriority, int thisDistance, int4 pos);
 int map_face_priority(__local struct shared_data *shared, uint localId, struct ModelInfo minfo, int thisPriority, int thisDistance, int *prio);
 void insert_dfs(__local struct shared_data *shared, uint localId, struct ModelInfo minfo, int adjPrio, int distance, int prioIdx);
+int tile_height(read_only image3d_t tileHeightMap, int z, int x, int y);
+int4 hillskew_vertex(read_only image3d_t tileHeightMap, int4 v, int hillskew, int y, int plane);
 void sort_and_insert(
   __local struct shared_data *shared,
   __global const float4 *uv,
