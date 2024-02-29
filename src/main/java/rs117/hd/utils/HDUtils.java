@@ -78,6 +78,32 @@ public class HDUtils {
 		return out;
 	}
 
+	public static float dot(float[] a, float[] b) {
+		float out = 0;
+		for (int i = 0; i < a.length; i++)
+			out += a[i] * b[i];
+		return out;
+	}
+
+	public static float magnitudeSquared(float[] vector) {
+		return dot(vector, vector);
+	}
+
+	public static float magnitude(float[] vector) {
+		return (float) Math.sqrt(magnitudeSquared(vector));
+	}
+
+	public static float[] multiply(float[] vec, float multiplier) {
+		float[] out = new float[vec.length];
+		for (int i = 0; i < vec.length; i++)
+			out[i] = vec[i] * multiplier;
+		return out;
+	}
+
+	public static float[] divide(float[] vec, float divide) {
+		return multiply(vec, 1 / divide);
+	}
+
 	public static float[] cross(float[] out, float[] a, float[] b) {
 		out[0] = a[1] * b[2] - a[2] * b[1];
 		out[1] = a[2] * b[0] - a[0] * b[2];

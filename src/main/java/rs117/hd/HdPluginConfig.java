@@ -34,6 +34,7 @@ import net.runelite.client.config.Units;
 import rs117.hd.config.AntiAliasingMode;
 import rs117.hd.config.ColorBlindMode;
 import rs117.hd.config.Contrast;
+import rs117.hd.config.DaylightCycle;
 import rs117.hd.config.DefaultSkyColor;
 import rs117.hd.config.FogDepthMode;
 import rs117.hd.config.MaxDynamicLights;
@@ -494,6 +495,18 @@ public interface HdPluginConfig extends Config
 	)
 	default SeasonalTheme seasonalTheme() {
 		return SeasonalTheme.AUTOMATIC;
+	}
+
+	@ConfigItem(
+		keyName = "daylightCycle",
+		name = "Daylight Cycle",
+		description = "Choose how the cycle between night and day should behave.",
+		position = 0,
+		section = environmentSettings
+	)
+	default DaylightCycle daylightCycle()
+	{
+		return DaylightCycle.HOUR_LONG_DAYS;
 	}
 
 	@ConfigItem(

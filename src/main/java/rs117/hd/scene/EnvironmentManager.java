@@ -149,7 +149,7 @@ public class EnvironmentManager {
 	private FileWatcher.UnregisterCallback fileWatcher;
 
 	@Nonnull
-	private Environment currentEnvironment = Environment.NONE;
+	public Environment currentEnvironment = Environment.NONE;
 
 	public void startUp() {
 		fileWatcher = ENVIRONMENTS_PATH.watch((path, first) -> {

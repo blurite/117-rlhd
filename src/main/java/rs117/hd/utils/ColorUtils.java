@@ -300,6 +300,10 @@ public class ColorUtils {
 		};
 	}
 
+	public static float[] rgb(Color c) {
+		return rgb(c.getRed(), c.getGreen(), c.getBlue());
+	}
+
 	public static int packHsl(float[] hsl) {
 		int H = clamp(Math.round((hsl[0] - .0078125f) * (0x3F + 1)), 0, 0x3F);
 		int S = clamp(Math.round((hsl[1] - .0625f) * (0x7 + 1)), 0, 0x7);

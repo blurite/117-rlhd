@@ -104,6 +104,7 @@ import rs117.hd.scene.ProceduralGenerator;
 import rs117.hd.scene.SceneContext;
 import rs117.hd.scene.SceneUploader;
 import rs117.hd.scene.TextureManager;
+import rs117.hd.scene.TimeOfDay;
 import rs117.hd.scene.lights.Light;
 import rs117.hd.scene.model_overrides.ModelOverride;
 import rs117.hd.scene.model_overrides.ObjectType;
@@ -124,7 +125,11 @@ import static org.lwjgl.opencl.CL10.*;
 import static org.lwjgl.opengl.GL43C.*;
 import static rs117.hd.HdPluginConfig.*;
 import static rs117.hd.scene.SceneUploader.SCENE_OFFSET;
+import static rs117.hd.scene.TimeOfDay.MINUTES_PER_DAY;
 import static rs117.hd.utils.HDUtils.PI;
+import static rs117.hd.utils.HDUtils.add;
+import static rs117.hd.utils.HDUtils.clamp;
+import static rs117.hd.utils.HDUtils.multiply;
 import static rs117.hd.utils.ResourcePath.path;
 
 @PluginDescriptor(
@@ -408,6 +413,8 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 	public boolean useLowMemoryMode;
 	public boolean enableDetailedTimers;
 	public boolean enableShadowMapOverlay;
+
+	public double[] latLong = { 0, 0 };
 
 	private boolean isActive;
 	private boolean lwjglInitialized;
@@ -1822,8 +1829,48 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 
 			glBindVertexArray(vaoSceneHandle);
 
-			float[] lightViewMatrix = Mat4.rotateX(PI + environmentManager.currentSunAngles[0]);
-			Mat4.mul(lightViewMatrix, Mat4.rotateY(PI - environmentManager.currentSunAngles[1]));
+			float[] directionalColor = environmentManager.currentDirectionalColor;
+			float directionalStrength = environmentManager.currentDirectionalStrength;
+			float[] ambientColor = environmentManager.currentAmbientColor;
+			float ambientStrength = environmentManager.currentAmbientStrength;
+			float[] fogColor = ColorUtils.linearToSrgb(environmentManager.currentFogColor);
+			float[] waterColor = environmentManager.currentWaterColor;
+			float[] sunAngles = environmentManager.currentSunAngles;
+
+			if (environmentManager.currentEnvironment.isOverworld) {
+				switch (config.daylightCycle()) {
+					case HOUR_LONG_DAYS:
+						directionalColor = TimeOfDay.getLightColor(latLong, MINUTES_PER_DAY);
+						ambientColor = TimeOfDay.getAmbientColor(latLong, MINUTES_PER_DAY);
+						directionalStrength = 1;
+						ambientStrength = 1;
+
+						double[] sunAnglesD = TimeOfDay.getSunAngles(latLong, MINUTES_PER_DAY);
+//						double[] sunAnglesD = TimeOfDay.getShadowAngles(latLong, MINUTES_PER_DAY);
+						sunAngles = new float[] { PI - (float) sunAnglesD[1], (float) sunAnglesD[0] };
+
+						fogColor = TimeOfDay.getSkyColor(latLong, MINUTES_PER_DAY);
+//						fogColor = ColorUtils.linearToSrgb(multiply(ambientColor, (float) clamp(Math.sin(sunAngles[1]), 0, 1)));
+						waterColor = fogColor;
+
+						// Blend shadows between day and night
+						float shadowVisibility = 1 - (float) Math.pow(1 - Math.abs(Math.sin(sunAnglesD[1])), 5);
+						shadowVisibility *= (float) (1 - Math.pow(1 - Math.sin(sunAnglesD[1]), 2));
+						shadowVisibility = clamp(shadowVisibility, 0, 1);
+						add(ambientColor, ambientColor, multiply(directionalColor, 1 - shadowVisibility));
+						directionalStrength *= shadowVisibility;
+						break;
+					case ALWAYS_NIGHT:
+						ambientColor = TimeOfDay.getNightAmbientColor();
+						ambientStrength = 1;
+						directionalColor = TimeOfDay.getNightLightColor();
+						directionalStrength = 1;
+						break;
+				}
+			}
+
+			float[] lightViewMatrix = Mat4.rotateX(PI + sunAngles[0]);
+			Mat4.mul(lightViewMatrix, Mat4.rotateY(PI - sunAngles[1]));
 
 			float[] lightProjectionMatrix = Mat4.identity();
 			if (configShadowsEnabled && fboShadowMap != 0 && environmentManager.currentDirectionalStrength > 0) {
@@ -1937,7 +1984,6 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 			frameTimer.begin(Timer.CLEAR_SCENE);
 
 			// Clear scene
-			float[] fogColor = ColorUtils.linearToSrgb(environmentManager.currentFogColor);
 			glClearColor(fogColor[0], fogColor[1], fogColor[2], 1f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
@@ -1962,7 +2008,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 			glUniform1i(uniExpandedMapLoadingChunks, sceneContext.expandedMapLoadingChunks);
 			glUniform1f(uniColorBlindnessIntensity, config.colorBlindnessIntensity() / 100.f);
 
-			float[] waterColorHsv = ColorUtils.srgbToHsv(environmentManager.currentWaterColor);
+			float[] waterColorHsv = ColorUtils.srgbToHsv(waterColor);
 			float lightBrightnessMultiplier = 0.8f;
 			float midBrightnessMultiplier = 0.45f;
 			float darkBrightnessMultiplier = 0.05f;
@@ -1986,10 +2032,10 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 			glUniform3fv(uniWaterColorDark, waterColorDark);
 
 			float brightness = config.brightness() / 20f;
-			glUniform1f(uniAmbientStrength, environmentManager.currentAmbientStrength * brightness);
-			glUniform3fv(uniAmbientColor, environmentManager.currentAmbientColor);
-			glUniform1f(uniLightStrength, environmentManager.currentDirectionalStrength * brightness);
-			glUniform3fv(uniLightColor, environmentManager.currentDirectionalColor);
+			glUniform1f(uniAmbientStrength, ambientStrength * brightness);
+			glUniform3fv(uniAmbientColor, ambientColor);
+			glUniform1f(uniLightStrength, directionalStrength * brightness);
+			glUniform3fv(uniLightColor, directionalColor);
 
 			glUniform1f(uniUnderglowStrength, environmentManager.currentUnderglowStrength);
 			glUniform3fv(uniUnderglowColor, environmentManager.currentUnderglowColor);
