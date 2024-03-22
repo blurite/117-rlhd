@@ -1,11 +1,12 @@
+#pragma once
+
 #include LIGHT_COUNT
 
 struct PointLight
 {
-    ivec3 position;
-    float size;
+    vec4 position;
     vec3 color;
-    float strength;
+    float pad;
 };
 
 layout(std140) uniform PointLightUniforms {

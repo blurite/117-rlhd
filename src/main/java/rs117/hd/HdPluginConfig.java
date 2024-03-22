@@ -25,16 +25,37 @@
  */
 package rs117.hd;
 
-import net.runelite.client.config.*;
+import net.runelite.client.config.Config;
+import net.runelite.client.config.ConfigGroup;
+import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.Range;
+import net.runelite.client.config.Units;
+import rs117.hd.config.AntiAliasingMode;
+import rs117.hd.config.ColorBlindMode;
+import rs117.hd.config.Contrast;
+import rs117.hd.config.DefaultSkyColor;
+import rs117.hd.config.FogDepthMode;
+import rs117.hd.config.MaxDynamicLights;
+import rs117.hd.config.Saturation;
+import rs117.hd.config.SeasonalTheme;
+import rs117.hd.config.ShadingMode;
+import rs117.hd.config.ShadowDistance;
+import rs117.hd.config.ShadowMode;
+import rs117.hd.config.ShadowResolution;
+import rs117.hd.config.TextureResolution;
+import rs117.hd.config.UIScalingMode;
+import rs117.hd.config.VanillaShadowMode;
 
 import static rs117.hd.HdPlugin.MAX_DISTANCE;
 import static rs117.hd.HdPlugin.MAX_FOG_DEPTH;
+import static rs117.hd.HdPluginConfig.CONFIG_GROUP;
 
-import rs117.hd.config.*;
-
-@ConfigGroup("hd")
+@ConfigGroup(CONFIG_GROUP)
 public interface HdPluginConfig extends Config
 {
+	String CONFIG_GROUP = "hd";
+
 	/*====== General settings ======*/
 
 	@ConfigSection(
@@ -51,22 +72,38 @@ public interface HdPluginConfig extends Config
 		keyName = "drawDistance",
 		name = "Draw Distance",
 		description =
-			"The maximum number of tiles to draw in either direction from the camera.<br>" +
-			"Depending on where the scene was loaded from, you might only see as far as 16 tiles in some directions.",
+			"The number of tiles to draw in either direction from the camera, up to a maximum of 184.<br>" +
+			"Depending on where the scene is centered, you might only see 16 tiles in one direction, unless you extend map loading.",
+		position = 0,
+		section = generalSettings
+	)
+	default int drawDistance() {
+		return 50;
+	}
+
+	String KEY_EXPANDED_MAP_LOADING_CHUNKS = "expandedMapLoadingChunks";
+	@Range(
+		max = 5
+	)
+	@ConfigItem(
+		keyName = KEY_EXPANDED_MAP_LOADING_CHUNKS,
+		name = "Extended map loading",
+		description =
+			"How much further the map should be loaded. The maximum is 5 extra chunks.<br>" +
+			"Note, extending the map can have a very high impact on performance.",
 		position = 1,
 		section = generalSettings
 	)
-	default int drawDistance()
-	{
-		return 50;
+	default int expandedMapLoadingChunks() {
+		return 3;
 	}
 
 	@ConfigItem(
 		keyName = "antiAliasingMode",
 		name = "Anti-Aliasing",
 		description =
-			"Improves jagged/shimmering edges at the cost of GPU performance.<br>" +
-			"16x MSAA is highly expensive, so 8x is recommended if anti-aliasing is desired.",
+			"Improves pixelated edges at the cost of significantly higher GPU usage.<br>" +
+			"MSAA x16 is very expensive, so x8 is recommended if anti-aliasing is desired.",
 		position = 2,
 		section = generalSettings
 	)
@@ -75,9 +112,10 @@ public interface HdPluginConfig extends Config
 		return AntiAliasingMode.DISABLED;
 	}
 
+	String KEY_UI_SCALING_MODE = "uiScalingMode";
 	@ConfigItem(
-		keyName = "uiScalingMode",
-		name = "UI scaling mode",
+		keyName = KEY_UI_SCALING_MODE,
+		name = "UI Scaling Mode",
 		description =
 			"The sampling function to use when the Stretched Mode plugin is enabled.<br>" +
 			"Affects how the UI looks with non-integer scaling.",
@@ -89,12 +127,13 @@ public interface HdPluginConfig extends Config
 		return UIScalingMode.LINEAR;
 	}
 
+	String KEY_ANISOTROPIC_FILTERING_LEVEL = "anisotropicFilteringLevel";
 	@Range(
 		min = 0,
 		max = 16
 	)
 	@ConfigItem(
-		keyName = "anisotropicFilteringLevel",
+		keyName = KEY_ANISOTROPIC_FILTERING_LEVEL,
 		name = "Anisotropic Filtering",
 		description =
 			"Configures whether mipmapping and anisotropic filtering should be used.<br>" +
@@ -109,8 +148,9 @@ public interface HdPluginConfig extends Config
 		return 16;
 	}
 
+	String KEY_UNLOCK_FPS = "unlockFps";
 	@ConfigItem(
-		keyName = "unlockFps",
+		keyName = KEY_UNLOCK_FPS,
 		name = "Unlock FPS",
 		description = "Removes the 50 FPS cap for some game content, such as camera movement and dynamic lighting.",
 		position = 5,
@@ -128,8 +168,9 @@ public interface HdPluginConfig extends Config
 		ADAPTIVE
 	}
 
+	String KEY_VSYNC_MODE = "vsyncMode";
 	@ConfigItem(
-		keyName = "vsyncMode",
+		keyName = KEY_VSYNC_MODE,
 		name = "VSync Mode",
 		description =
 			"Controls whether the frame rate should be synchronized with your monitor's refresh rate.<br>" +
@@ -146,8 +187,9 @@ public interface HdPluginConfig extends Config
 		return SyncMode.ADAPTIVE;
 	}
 
+	String KEY_FPS_TARGET = "fpsTarget";
 	@ConfigItem(
-		keyName = "fpsTarget",
+		keyName = KEY_FPS_TARGET,
 		name = "FPS Target",
 		description =
 			"Controls the maximum number of frames per second.<br>" +
@@ -164,8 +206,9 @@ public interface HdPluginConfig extends Config
 		return 60;
 	}
 
+	String KEY_COLOR_BLINDNESS = "colorBlindMode";
 	@ConfigItem(
-		keyName = "colorBlindMode",
+		keyName = KEY_COLOR_BLINDNESS,
 		name = "Color Blindness",
 		description = "Adjust colors to make them more distinguishable for people with a certain type of color blindness.",
 		position = 8,
@@ -178,7 +221,7 @@ public interface HdPluginConfig extends Config
 
 	@ConfigItem(
 		keyName = "colorBlindnessIntensity",
-		name = "Color Blindness Intensity",
+		name = "Blindness Intensity",
 		description = "Specifies how intense the color blindness adjustment should be.",
 		position = 9,
 		section = generalSettings
@@ -203,25 +246,41 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "saturation",
+		keyName = "fSaturation",
 		name = "Saturation",
-		description = "Controls the saturation of the final rendered image.",
+		description = "Controls the saturation of the final rendered image.<br>" +
+			"Intended to be kept between 0% and 120%.",
 		position = 11,
 		section = generalSettings
 	)
-	default Saturation saturation()
+	@Units(Units.PERCENT)
+	@Range(min = -500, max = 500)
+	default int saturation()
+	{
+		return Math.round(oldSaturationDropdown().getAmount() * 100);
+	}
+	@ConfigItem(keyName = "saturation", hidden = true, name = "", description = "")
+	default Saturation oldSaturationDropdown()
 	{
 		return Saturation.DEFAULT;
 	}
 
 	@ConfigItem(
-		keyName = "contrast",
+		keyName = "fContrast",
 		name = "Contrast",
-		description = "Controls the contrast of the final rendered image.",
+		description = "Controls the contrast of the final rendered image.<br>" +
+			"Intended to be kept between 90% and 110%.",
 		position = 12,
 		section = generalSettings
 	)
-	default Contrast contrast()
+	@Units(Units.PERCENT)
+	@Range(min = -500, max = 500)
+	default int contrast()
+	{
+		return Math.round(oldContrastDropdown().getAmount() * 100);
+	}
+	@ConfigItem(keyName = "contrast", hidden = true, name = "", description = "")
+	default Contrast oldContrastDropdown()
 	{
 		return Contrast.DEFAULT;
 	}
@@ -233,7 +292,8 @@ public interface HdPluginConfig extends Config
 	@ConfigItem(
 		keyName = "brightness2",
 		name = "Brightness",
-		description = "Controls the brightness of environmental lighting.",
+		description = "Controls the brightness of environmental lighting.<br>" +
+			"A brightness value of 20 is recommended.",
 		position = 13,
 		section = generalSettings
 	)
@@ -249,8 +309,9 @@ public interface HdPluginConfig extends Config
 	)
 	String lightingSettings = "lightingSettings";
 
+	String KEY_MAX_DYNAMIC_LIGHTS = "maxDynamicLights";
 	@ConfigItem(
-		keyName = "maxDynamicLights",
+		keyName = KEY_MAX_DYNAMIC_LIGHTS,
 		name = "Dynamic Lights",
 		description =
 			"The maximum number of dynamic lights visible at once.<br>" +
@@ -263,66 +324,86 @@ public interface HdPluginConfig extends Config
 		return MaxDynamicLights.SOME;
 	}
 
+	String KEY_PROJECTILE_LIGHTS = "projectileLights";
 	@ConfigItem(
-		keyName = "projectileLights",
+		keyName = KEY_PROJECTILE_LIGHTS,
 		name = "Projectile Lights",
 		description = "Adds dynamic lights to some projectiles.",
 		position = 2,
 		section = lightingSettings
 	)
-	default boolean projectileLights()
-	{
+	default boolean projectileLights() {
 		return true;
 	}
 
+	String KEY_NPC_LIGHTS = "npcLights";
 	@ConfigItem(
-		keyName = "npcLights",
+		keyName = KEY_NPC_LIGHTS,
 		name = "NPC Lights",
 		description = "Adds dynamic lights to some NPCs.",
 		position = 3,
 		section = lightingSettings
 	)
-	default boolean npcLights()
-	{
+	default boolean npcLights() {
 		return true;
 	}
 
+	String KEY_ATMOSPHERIC_LIGHTING = "environmentalLighting";
 	@ConfigItem(
-		keyName = "environmentalLighting",
+		keyName = KEY_ATMOSPHERIC_LIGHTING,
 		name = "Atmospheric Lighting",
 		description = "Change environmental lighting based on the current area.",
 		position = 4,
 		section = lightingSettings
 	)
-	default boolean atmosphericLighting()
-	{
+	default boolean atmosphericLighting() {
 		return true;
 	}
 
+	String KEY_SHADOW_MODE = "shadowMode";
 	@ConfigItem(
-		keyName = "shadowsEnabled",
+		keyName = KEY_SHADOW_MODE,
 		name = "Shadows",
-		description = "Enables fully dynamic shadows.",
+		description =
+			"Render fully dynamic shadows.<br>" +
+			"'Off' completely disables shadows.<br>" +
+			"'Fast' enables fast shadows without any texture detail.<br>" +
+			"'Detailed' enables slower shadows with support for texture detail.",
 		position = 5,
 		section = lightingSettings
 	)
-	default boolean shadowsEnabled()
+	default ShadowMode shadowMode()
+	{
+		return ShadowMode.DETAILED;
+	}
+
+	String KEY_SHADOW_TRANSPARENCY = "enableShadowTransparency";
+	@ConfigItem(
+		keyName = "enableShadowTransparency",
+		name = "Shadow Transparency",
+		description =
+			"Enables partial support for shadows that take transparency into account.",
+		position = 6,
+		section = lightingSettings
+	)
+	default boolean enableShadowTransparency()
 	{
 		return true;
 	}
 
+	String KEY_SHADOW_RESOLUTION = "shadowResolution";
 	@ConfigItem(
-		keyName = "shadowResolution",
+		keyName = KEY_SHADOW_RESOLUTION,
 		name = "Shadow Quality",
 		description =
 			"The resolution of the shadow map.<br>" +
-			"Higher resolutions result in higher quality shadows, at the cost of GPU performance.",
-		position = 6,
+			"Higher resolutions result in higher quality shadows, at the cost of higher GPU usage.",
+		position = 7,
 		section = lightingSettings
 	)
 	default ShadowResolution shadowResolution()
 	{
-		return ShadowResolution.RES_1024;
+		return ShadowResolution.RES_4096;
 	}
 
 	@ConfigItem(
@@ -331,21 +412,22 @@ public interface HdPluginConfig extends Config
 		description =
 			"The maximum draw distance for shadows.<br>" +
 			"Shorter distances result in higher quality shadows.",
-		position = 7,
+		position = 9,
 		section = lightingSettings
 	)
 	default ShadowDistance shadowDistance()
 	{
-		return ShadowDistance.DISTANCE_30;
+		return ShadowDistance.DISTANCE_50;
 	}
 
+	String KEY_EXPAND_SHADOW_DRAW = "expandShadowDraw";
 	@ConfigItem(
-		keyName = "expandShadowDraw",
+		keyName = KEY_EXPAND_SHADOW_DRAW,
 		name = "Expand Shadow Draw",
 		description =
 			"Reduces shadows popping in and out at the edge of the screen by rendering<br>" +
-			"shadows for a larger portion of the scene, at the cost of performance.",
-		position = 8,
+			"shadows for a larger portion of the scene, at the cost of higher GPU usage.",
+		position = 10,
 		section = lightingSettings
 	)
 	default boolean expandShadowDraw()
@@ -353,30 +435,44 @@ public interface HdPluginConfig extends Config
 		return false;
 	}
 
+	String KEY_VANILLA_SHADOW_MODE = "vanillaShadowMode";
 	@ConfigItem(
-		keyName = "hideBakedEffects",
-		name = "Hide Fake Shadows",
+		keyName = KEY_VANILLA_SHADOW_MODE,
+		name = "Vanilla Shadows",
 		description =
-			"Hide fake shadows and lighting which is often built into models by Jagex.<br>" +
-			"This does not affect the hitbox of NPCs, so you can still click where the fake shadow would normally be.",
-		position = 9,
+			"Choose whether shadows built into models by Jagex should be hidden. This does not affect clickboxes.<br>" +
+			"'Show in PvM' will retain shadows for falling crystals during the Olm fight and other useful cases.<br>" +
+			"'Prefer in PvM' will do the above and also disable 117 HD's dynamic shadows in such cases.",
+		position = 11,
 		section = lightingSettings
 	)
-	default boolean hideBakedEffects() {
+	default VanillaShadowMode vanillaShadowMode() {
+		return VanillaShadowMode.SHOW_IN_PVM;
+	}
+
+	String KEY_NORMAL_MAPPING = "normalMapping";
+	@ConfigItem(
+		keyName = KEY_NORMAL_MAPPING,
+		name = "Normal Mapping",
+		description = "Affects how light interacts with certain materials. Barely impacts performance.",
+		position = 12,
+		section = lightingSettings
+	)
+	default boolean normalMapping() {
 		return true;
 	}
 
-	// TODO: Fix parallax mapping before uncommenting this. See TODOs in displacement.glsl
-//	@ConfigItem(
-//		keyName = "parallaxMappingMode",
-//		name = "Parallax mapping",
-//		description = "Enable parallax mapping to add more depth to materials that support it. Impacts performance considerably.",
-//		position = 10,
-//		section = lightingSettings
-//	)
-//	default ParallaxMappingMode parallaxMappingMode() {
-//		return ParallaxMappingMode.FULL;
-//	}
+	String KEY_PARALLAX_OCCLUSION_MAPPING = "parallaxOcclusionMappingToggle";
+	@ConfigItem(
+		keyName = KEY_PARALLAX_OCCLUSION_MAPPING,
+		name = "Parallax Occlusion Mapping",
+		description = "Adds more depth to some materials, at the cost of higher GPU usage.",
+		position = 13,
+		section = lightingSettings
+	)
+	default boolean parallaxOcclusionMapping() {
+		return true;
+	}
 
 
 	/*====== Environment settings ======*/
@@ -384,10 +480,21 @@ public interface HdPluginConfig extends Config
 	@ConfigSection(
 		name = "Environment",
 		description = "Environment settings",
-		position = 2,
-		closedByDefault = false
+		position = 2
 	)
 	String environmentSettings = "environmentSettings";
+
+	String KEY_SEASONAL_THEME = "seasonalTheme";
+	@ConfigItem(
+		keyName = KEY_SEASONAL_THEME,
+		name = "Seasonal Theme",
+		description = "Festive themes for Gielinor.",
+		position = 0,
+		section = environmentSettings
+	)
+	default SeasonalTheme seasonalTheme() {
+		return SeasonalTheme.AUTOMATIC;
+	}
 
 	@ConfigItem(
 		keyName = "fogDepthMode",
@@ -434,9 +541,10 @@ public interface HdPluginConfig extends Config
 
 	@ConfigItem(
 		keyName = "defaultSkyColor",
-		name = "Default Sky Color",
+		name = "Default Sky",
 		description =
 			"Specify a sky color to use when the current area doesn't have a sky color defined.<br>" +
+			"This only applies when the default summer seasonal theme is active.<br>" +
 			"If set to 'RuneLite Skybox', the sky color from RuneLite's Skybox plugin will be used.<br>" +
 			"If set to 'Old School Black', the sky will be black and water will remain blue, but for any<br>" +
 			"other option, the water color will be influenced by the sky color.",
@@ -459,20 +567,21 @@ public interface HdPluginConfig extends Config
 		return false;
 	}
 
+	String KEY_MODEL_TEXTURES = "objectTextures";
 	@ConfigItem(
-		keyName = "objectTextures",
+		keyName = KEY_MODEL_TEXTURES,
 		name = "Model Textures",
 		description = "Adds textures to some models.",
 		position = 6,
 		section = environmentSettings
 	)
-	default boolean objectTextures()
-	{
+	default boolean modelTextures() {
 		return true;
 	}
 
+	String KEY_GROUND_TEXTURES = "groundTextures";
 	@ConfigItem(
-		keyName = "groundTextures",
+		keyName = KEY_GROUND_TEXTURES,
 		name = "Ground Textures",
 		description = "Adds textures to some ground tiles.",
 		position = 7,
@@ -483,8 +592,9 @@ public interface HdPluginConfig extends Config
 		return true;
 	}
 
+	String KEY_TEXTURE_RESOLUTION = "textureResolution";
 	@ConfigItem(
-		keyName = "textureResolution",
+		keyName = KEY_TEXTURE_RESOLUTION,
 		name = "Texture Resolution",
 		description = "Controls the resolution used for all in-game textures.",
 		position = 8,
@@ -495,8 +605,9 @@ public interface HdPluginConfig extends Config
 		return TextureResolution.RES_256;
 	}
 
+	String KEY_GROUND_BLENDING = "groundBlending";
 	@ConfigItem(
-		keyName = "groundBlending",
+		keyName = KEY_GROUND_BLENDING,
 		name = "Ground Blending",
 		description = "Controls whether ground tiles should blend into each other, or have distinct edges.",
 		position = 9,
@@ -519,15 +630,15 @@ public interface HdPluginConfig extends Config
 		return true;
 	}
 
+	String KEY_HD_TZHAAR_RESKIN = "tzhaarHD";
 	@ConfigItem(
-		keyName = "tzhaarHD",
+		keyName = KEY_HD_TZHAAR_RESKIN,
 		name = "HD TzHaar Reskin",
 		description = "Recolors the TzHaar city of Mor Ul Rek to give it an appearance similar to that of its 2008 HD variant.",
 		position = 11,
 		section = environmentSettings
 	)
-	default boolean tzhaarHD()
-	{
+	default boolean hdTzHaarReskin() {
 		return true;
 	}
 
@@ -589,58 +700,49 @@ public interface HdPluginConfig extends Config
 	String KEY_MODEL_BATCHING = "useModelBatching";
 	@ConfigItem(
 		keyName = KEY_MODEL_BATCHING,
-		name = "Enable model batching",
+		name = "Model Batching",
 		description =
 			"Model batching improves performance by reusing identical models within the same frame.<br>" +
 			"May cause instability and graphical bugs, particularly if Jagex makes engine changes.",
 		position = 1,
 		section = modelCachingSettings
 	)
-	default boolean enableModelBatching() { return true; }
+	default boolean modelBatching() {return true;}
 
 	String KEY_MODEL_CACHING = "useModelCaching";
 	@ConfigItem(
 		keyName = KEY_MODEL_CACHING,
-		name = "Enable model caching",
+		name = "Model Caching",
 		description =
 			"Model caching improves performance by saving and reusing model data from previous frames.<br>" +
 			"May cause instability or graphical bugs, particularly if Jagex makes engine changes.",
 		position = 2,
 		section = modelCachingSettings
 	)
-	default boolean enableModelCaching() { return true; }
+	default boolean modelCaching() {return true;}
 
-	String KEY_MODEL_CACHE_SIZE = "modelCacheSizeMiB";
+	String KEY_MODEL_CACHE_SIZE = "modelCacheSizeMiBv2";
 	@Range(
-		min = 256,
+		min = 64,
 		max = 16384
 	)
 	@ConfigItem(
 		keyName = KEY_MODEL_CACHE_SIZE,
-		name = "Model cache size (MiB)",
+		name = "Cache Size (MiB)",
 		description =
 			"Size of the model cache in mebibytes (slightly more than megabytes).<br>" +
-			"Generally, 2048 MiB is plenty, with diminishing returns the higher you go.<br>" +
-			"Minimum=256 MiB, maximum=16384 MiB",
+			"Generally, 512 MiB is plenty, with diminishing returns the higher you go.<br>" +
+			"Minimum=64 MiB, maximum=16384 MiB",
 		position = 3,
 		section = modelCachingSettings
 	)
 	default int modelCacheSizeMiB() {
-		return 2048;
+		return modelCacheSizeMiBv1() / 4;
 	}
-
-	@ConfigItem(
-		keyName = "loadingClearCache",
-		name = "Clear cache when loading",
-		description =
-			"Clear the model cache when the game loads a new scene.<br>" +
-			"This should generally only be used if the cache size is lower than 512 MiB,<br>" +
-			"because old model data may still be useful in the new scene.",
-		position = 4,
-		section = modelCachingSettings
-	)
-	default boolean loadingClearCache() {
-		return false;
+	@ConfigItem(keyName = "modelCacheSizeMiB", hidden = true, name = "", description = "")
+	default int modelCacheSizeMiBv1()
+	{
+		return 2048;
 	}
 
 
@@ -654,10 +756,11 @@ public interface HdPluginConfig extends Config
 	)
 	String miscellaneousSettings = "miscellaneousSettings";
 
+	String KEY_MACOS_INTEL_WORKAROUND = "macosIntelWorkaround";
 	@ConfigItem(
-		keyName = "macosIntelWorkaround",
-		name = "Fix broken colors on intel Macs",
-		description = "Workaround for visual artifacts found on some intel GPU drivers on macOS.",
+		keyName = KEY_MACOS_INTEL_WORKAROUND,
+		name = "Fix white color issue on Macs",
+		description = "Workaround for visual artifacts found on some Intel GPU drivers on macOS.",
 		warning =
 			"This setting can cause RuneLite to crash, and it can be difficult to undo.\n" +
 			"Only enable it if you are seeing broken colors. Are you sure you want to enable this setting?",
@@ -669,8 +772,9 @@ public interface HdPluginConfig extends Config
 		return false;
 	}
 
+	String KEY_HD_INFERNAL_CAPE = "hdInfernalTexture";
 	@ConfigItem(
-		keyName = "hdInfernalTexture",
+		keyName = KEY_HD_INFERNAL_CAPE,
 		name = "HD Infernal Cape",
 		description =
 			"Replace the infernal cape texture with a more detailed version.<br>" +
@@ -678,48 +782,131 @@ public interface HdPluginConfig extends Config
 		position = 2,
 		section = miscellaneousSettings
 	)
-	default boolean hdInfernalTexture()
-	{
+	default boolean hdInfernalTexture() {
 		return true;
 	}
 
-	String KEY_WINTER_THEME = "winterTheme0";
-	@ConfigItem(
-		keyName = KEY_WINTER_THEME,
-		name = "Winter theme",
-		description = "Covers the Gielinor overworld with a layer of snow!",
-		position = 3,
-		section = miscellaneousSettings
-	)
-	default boolean winterTheme()
-	{
-		return false;
-	}
-
-	String KEY_LEGACY_GREY_COLORS = "reduceOverExposure"; // poorly named config key for legacy reasons
+	String KEY_LEGACY_GREY_COLORS = "reduceOverExposure";
 	@ConfigItem(
 		keyName = KEY_LEGACY_GREY_COLORS,
-		name = "Legacy grey colors",
+		name = "Legacy Grey Colors",
 		description =
 			"Previously, HD attempted to reduce over-exposure by capping the maximum color brightness,<br>" +
 			"which changed white colors into dull shades of grey. This option brings back that old behaviour.",
 		position = 4,
 		section = miscellaneousSettings
 	)
-	default boolean enableLegacyGreyColors() {
+	default boolean legacyGreyColors() {
+		return false;
+	}
+
+	String KEY_VANILLA_COLOR_BANDING = "vanillaColorBanding";
+	@ConfigItem(
+		keyName = KEY_VANILLA_COLOR_BANDING,
+		name = "Vanilla Color Banding",
+		description =
+			"Blend between colors similarly to how it works in vanilla, with clearly defined bands of color.<br>" +
+			"This isn't really noticeable on textured surfaces, and is intended to be used without ground textures.",
+		position = 5,
+		section = miscellaneousSettings
+	)
+	default boolean vanillaColorBanding() {
+		return false;
+	}
+
+	String KEY_LOW_MEMORY_MODE = "lowMemoryMode";
+	@ConfigItem(
+		keyName = KEY_LOW_MEMORY_MODE,
+		name = "Low Memory Mode",
+		description = "Turns off features which require extra memory, such as model caching, faster scene loading & extended scene loading.",
+		warning =
+			"<html>This <b>will not</b> result in better performance. It is recommended only if you are unable to install<br>" +
+			"the 64-bit version of RuneLite, or if your computer has a very low amount of memory available.</html>",
+		position = 6,
+		section = miscellaneousSettings
+	)
+	default boolean lowMemoryMode() {
 		return false;
 	}
 
 
 	/*====== Experimental settings ======*/
 
-//	@ConfigSection(
-//		name = "Experimental",
-//		description = "Experimental features - if you're experiencing issues you should consider disabling these",
-//		position = 5,
-//		closedByDefault = true
-//	)
-//	String experimentalSettings = "experimentalSettings";
+	@ConfigSection(
+		name = "Experimental",
+		description = "Experimental features - if you're experiencing issues you should consider disabling these",
+		position = 5,
+		closedByDefault = true
+	)
+	String experimentalSettings = "experimentalSettings";
+
+	String KEY_FILL_GAPS_IN_TERRAIN = "experimentalFillGapsInTerrain2";
+	@ConfigItem(
+		keyName = KEY_FILL_GAPS_IN_TERRAIN,
+		name = "Fill gaps in terrain",
+		description = "Attempt to patch all holes in the ground, such as around trapdoors and ladders.",
+		section = experimentalSettings
+	)
+	default boolean fillGapsInTerrain() {
+		return true;
+	}
+
+	String KEY_FASTER_MODEL_HASHING = "experimentalFasterModelHashing";
+	@ConfigItem(
+		keyName = KEY_FASTER_MODEL_HASHING,
+		name = "Use faster model hashing",
+		description = "Should increase performance at the expense of potential graphical issues.",
+		section = experimentalSettings
+	)
+	default boolean fasterModelHashing() {
+		return true;
+	}
+
+	String KEY_PRESERVE_VANILLA_NORMALS = "experimentalPreserveVanillaNormals";
+	@ConfigItem(
+		keyName = KEY_PRESERVE_VANILLA_NORMALS,
+		name = "Preserve vanilla normals",
+		description = "Originally, 117 HD would respect vanilla normals, but these are often less accurate.",
+		section = experimentalSettings
+	)
+	default boolean preserveVanillaNormals() {
+		return false;
+	}
+
+	String KEY_SHADING_MODE = "experimentalShadingMode";
+	@ConfigItem(
+		keyName = KEY_SHADING_MODE,
+		name = "Shading mode",
+		description =
+			"If you prefer playing without shadows, maybe you'll prefer vanilla shading or no shading as well.<br>" +
+			"Keep in mind, with vanilla shading used alongside shadows, you can end up with double shading.",
+		section = experimentalSettings
+	)
+	default ShadingMode shadingMode() {
+		return ShadingMode.DEFAULT;
+	}
+
+	String KEY_FLAT_SHADING = "experimentalFlatShading";
+	@ConfigItem(
+		keyName = KEY_FLAT_SHADING,
+		name = "Flat shading",
+		description = "Gives a more low-poly look to the game.",
+		section = experimentalSettings
+	)
+	default boolean flatShading() {
+		return false;
+	}
+
+	String KEY_DECOUPLE_WATER_FROM_SKY_COLOR = "experimentalDecoupleWaterFromSkyColor";
+	@ConfigItem(
+		keyName = KEY_DECOUPLE_WATER_FROM_SKY_COLOR,
+		name = "Decouple water from sky color",
+		description = "Some people prefer the water staying blue even with a different sky color active.",
+		section = experimentalSettings
+	)
+	default boolean decoupleSkyAndWaterColor() {
+		return false;
+	}
 
 
 	/*====== Internal settings ======*/

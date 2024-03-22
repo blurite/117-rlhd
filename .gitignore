@@ -1,10 +1,15 @@
 .gradle
 build
 .idea/*
+!.idea/codeStyles/
+!.idea/runConfigurations/
+!.idea/inspectionProfiles/
 !.idea/jsonSchemas.xml
+!.idea/icon.png
 .project
 .settings/
 .classpath
 nbactions.xml
 nb-configuration.xml
 nbproject/
+hs_err_pid*

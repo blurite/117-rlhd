@@ -26,64 +26,82 @@
 
 #version 330
 
-#define PI 3.1415926535897932384626433832795f
-#define UNIT PI / 1024.0f
-
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-#include utils/polyfills.glsl
-#include utils/constants.glsl
-#include utils/misc.glsl
-
 uniform mat4 projectionMatrix;
-uniform mat4 lightProjectionMatrix;
+uniform float elapsedTime;
+uniform vec3 cameraPos;
 
-in VertexData {
-    ivec3 pos;
-    vec4 normal;
-    vec4 color;
-    vec4 uv;
-    float fogAmount;
-} IN[3];
+#include utils/constants.glsl
+#define USE_VANILLA_UV_PROJECTION
+#include utils/uvs.glsl
+#include utils/color_utils.glsl
+
+in vec3 gPosition[3];
+in vec3 gUv[3];
+in vec3 gNormal[3];
+in vec4 gColor[3];
+in float gFogAmount[3];
+in int gMaterialData[3];
+in int gTerrainData[3];
 
 flat out vec4 vColor[3];
 flat out vec3 vUv[3];
 flat out int vMaterialData[3];
 flat out int vTerrainData[3];
+flat out vec3 T;
+flat out vec3 B;
 
 out FragmentData {
-    float fogAmount;
-    vec3 normal;
     vec3 position;
+    vec3 normal;
     vec3 texBlend;
+    float fogAmount;
 } OUT;
 
 void main() {
-    int materialData = int(IN[0].uv.w);
-    bool flatNormals =
-        length(IN[0].normal.xyz) < .01 ||
-        (materialData >> MATERIAL_FLAG_FLAT_NORMALS & 1) == 1;
-
-    // Compute flat normals
-    vec3 T = vec3(IN[0].pos - IN[1].pos);
-    vec3 B = vec3(IN[0].pos - IN[2].pos);
-    vec3 N = normalize(cross(T, B));
-
+    // MacOS doesn't allow assigning these arrays directly.
+    // One of the many wonders of Apple software...
     for (int i = 0; i < 3; i++) {
-        vColor[i] = IN[i].color;
-        vUv[i] = IN[i].uv.xyz;
-        vMaterialData[i] = int(IN[i].uv.w);
-        vTerrainData[i] = int(IN[i].normal.w);
+        vColor[i] = gColor[i];
+        vUv[i] = gUv[i];
+        vMaterialData[i] = gMaterialData[i];
+        vTerrainData[i] = gTerrainData[i];
     }
 
+    computeUvs(vMaterialData[0], vec3[](gPosition[0], gPosition[1], gPosition[2]), vUv);
+
+    // Calculate tangent-space vectors
+    mat2 triToUv = mat2(
+        vUv[1].xy - vUv[0].xy,
+        vUv[2].xy - vUv[0].xy
+    );
+    if (determinant(triToUv) == 0)
+        triToUv = mat2(1);
+    mat2 uvToTri = inverse(triToUv) * -1; // Flip UV direction, since OSRS UVs are oriented strangely
+    mat2x3 triToWorld = mat2x3(
+        gPosition[1] - gPosition[0],
+        gPosition[2] - gPosition[0]
+    );
+    mat2x3 TB = triToWorld * uvToTri; // Preserve scale in order for displacement to interact properly with shadow mapping
+    T = TB[0];
+    B = TB[1];
+    vec3 N = normalize(cross(triToWorld[0], triToWorld[1]));
+
     for (int i = 0; i < 3; i++) {
+        // Flat normals must be applied separately per vertex
+        vec3 normal = gNormal[i];
+        OUT.position = gPosition[i];
+        #if FLAT_SHADING
+        OUT.normal = N;
+        #else
+        OUT.normal = length(normal) == 0 ? N : normalize(normal);
+        #endif
         OUT.texBlend = vec3(0);
         OUT.texBlend[i] = 1;
-        OUT.fogAmount = IN[i].fogAmount;
-        OUT.position = IN[i].pos;
-        OUT.normal = flatNormals ? N : normalize(IN[i].normal.xyz);
-        gl_Position = projectionMatrix * vec4(IN[i].pos, 1.f);
+        OUT.fogAmount = gFogAmount[i];
+        gl_Position = projectionMatrix * vec4(OUT.position, 1);
         EmitVertex();
     }
 

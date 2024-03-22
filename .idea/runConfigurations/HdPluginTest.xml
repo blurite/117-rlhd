@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="HdPluginTest" type="Application" factoryName="Application" singleton="false">
+    <option name="MAIN_CLASS_NAME" value="rs117.hd.HdPluginTest" />
+    <module name="hd.test" />
+    <option name="PROGRAM_PARAMETERS" value="--developer-mode --debug --disable-telemetry" />
+    <option name="VM_PARAMETERS" value="-ea -Xmx768M" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="rs117.hd.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

@@ -24,14 +24,14 @@
  */
 
 struct uniform {
-  int cameraYaw;
-  int cameraPitch;
+  float cameraYaw;
+  float cameraPitch;
   int centerX;
   int centerY;
   int zoom;
-  int cameraX;
-  int cameraY;
-  int cameraZ;
+  float cameraX;
+  float cameraY;
+  float cameraZ;
   int4 sinCosTable[2048];
 };
 
@@ -48,7 +48,7 @@ struct ModelInfo {
   int uvOffset; // offset into uv buffer
   int size;     // length in faces
   int idx;      // write idx in target buffer
-  int flags;    // radius, orientation
+  int flags;    // hillskew, plane, radius, orientation
   int x;        // scene position x
   int y;        // scene position y
   int z;        // scene position z

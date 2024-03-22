@@ -1,144 +1,186 @@
 package rs117.hd.scene;
 
-import com.google.inject.Inject;
-import lombok.NonNull;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.*;
 import net.runelite.client.callback.ClientThread;
 import rs117.hd.HdPlugin;
 import rs117.hd.model.ModelPusher;
 import rs117.hd.scene.model_overrides.ModelOverride;
-import rs117.hd.utils.AABB;
-import rs117.hd.utils.Env;
+import rs117.hd.utils.FileWatcher;
 import rs117.hd.utils.ModelHash;
+import rs117.hd.utils.Props;
 import rs117.hd.utils.ResourcePath;
-
-import javax.inject.Singleton;
-import java.io.IOException;
-import java.util.HashMap;
 
 import static rs117.hd.utils.ResourcePath.path;
 
 @Singleton
 @Slf4j
 public class ModelOverrideManager {
-    private static final String ENV_MODEL_OVERRIDES = "RLHD_MODEL_OVERRIDES_PATH";
-    private static final ResourcePath modelOverridesPath =  Env.getPathOrDefault(ENV_MODEL_OVERRIDES,
-        () -> path(ModelOverrideManager.class, "model_overrides.json"));
+	private static final ResourcePath MODEL_OVERRIDES_PATH = Props.getPathOrDefault(
+		"rlhd.model-overrides-path",
+		() -> path(ModelOverrideManager.class, "model_overrides.json")
+	);
 
-    @Inject
-    private Client client;
+	@Inject
+	private Client client;
 
-    @Inject
-    private ClientThread clientThread;
+	@Inject
+	private ClientThread clientThread;
 
-    @Inject
-    private HdPlugin plugin;
+	@Inject
+	private HdPlugin plugin;
 
-    @Inject
-    private ModelPusher modelPusher;
+	@Inject
+	private ModelPusher modelPusher;
 
-    private final HashMap<Long, ModelOverride> modelOverrides = new HashMap<>();
-    private final HashMap<Long, AABB[]> modelsToHide = new HashMap<>();
+	private final HashMap<Integer, ModelOverride> modelOverrides = new HashMap<>();
 
-    public void startUp() {
-        modelOverridesPath.watch(path -> {
-            modelOverrides.clear();
-            modelsToHide.clear();
+	private FileWatcher.UnregisterCallback fileWatcher;
 
-            try {
-                ModelOverride[] entries = path.loadJson(plugin.getGson(), ModelOverride[].class);
-                if (entries == null)
-                    throw new IOException("Empty or invalid: " + path);
-                for (ModelOverride entry : entries) {
-                    for (int npcId : entry.npcIds)
-                        addEntry(ModelHash.packUuid(npcId, ModelHash.TYPE_NPC), entry);
-                    for (int objectId : entry.objectIds)
-                        addEntry(ModelHash.packUuid(objectId, ModelHash.TYPE_OBJECT), entry);
-                }
-                if (client.getGameState() == GameState.LOGGED_IN) {
-                    clientThread.invokeLater(() -> {
-                        plugin.uploadScene();
-                        modelPusher.clearModelCache();
-                    });
-                }
-                log.debug("Loaded {} model overrides", modelOverrides.size());
-            } catch (IOException ex) {
-                log.error("Failed to load model overrides:", ex);
-            }
-        });
-    }
+	public void startUp() {
+		fileWatcher = MODEL_OVERRIDES_PATH.watch((path, first) -> {
+			modelOverrides.clear();
 
-    private void addEntry(long uuid, ModelOverride entry) {
-        // Ensure there are no nulls in case of invalid configuration during development
-        if (entry.baseMaterial == null)
-            entry.baseMaterial = ModelOverride.NONE.baseMaterial;
-        if (entry.textureMaterial == null)
-            entry.textureMaterial = ModelOverride.NONE.textureMaterial;
-        if (entry.uvType == null)
-            entry.uvType = ModelOverride.NONE.uvType;
-        if (entry.tzHaarRecolorType == null)
-            entry.tzHaarRecolorType = ModelOverride.NONE.tzHaarRecolorType;
-        if (entry.inheritTileColorType == null)
-            entry.inheritTileColorType = ModelOverride.NONE.inheritTileColorType;
-        if (entry.hideInAreas == null)
-            entry.hideInAreas = new AABB[0];
+			try {
+				ModelOverride[] entries = path.loadJson(plugin.getGson(), ModelOverride[].class);
+				if (entries == null)
+					throw new IOException("Empty or invalid: " + path);
+				for (ModelOverride override : entries) {
+					try {
+						override.normalize(plugin.configVanillaShadowMode);
+					} catch (IllegalStateException ex) {
+						log.error("Invalid model override '{}': {}", override.description, ex.getMessage());
+						continue;
+					}
 
-        ModelOverride old = modelOverrides.put(uuid, entry);
-        modelsToHide.put(uuid, entry.hideInAreas);
+					addOverride(override);
 
-        if (Env.DEVELOPMENT && old != null) {
-            if (entry.hideInAreas.length > 0) {
-                log.warn("Replacing ID {} from '{}' with hideInAreas-override '{}'. This is likely a mistake...",
-                    ModelHash.getIdOrIndex(uuid), old.description, entry.description);
-            } else if (old.hideInAreas.length == 0) {
-                log.warn("Replacing ID {} from '{}' with '{}'. The first-mentioned override should be removed.",
-                    ModelHash.getIdOrIndex(uuid), old.description, entry.description);
-            }
-        }
-    }
+					if (override.hideInAreas.length > 0) {
+						var hider = override.copy();
+						hider.hide = true;
+						hider.areas = override.hideInAreas;
+						addOverride(hider);
+					}
+				}
 
-    public boolean shouldHideModel(long hash, int x, int z) {
-        long uuid = ModelHash.getUuid(client, hash);
+				log.debug("Loaded {} model overrides", modelOverrides.size());
+			} catch (IOException ex) {
+				log.error("Failed to load model overrides:", ex);
+			}
 
-        AABB[] aabbs = modelsToHide.get(uuid);
-        if (aabbs != null && hasNoActions(uuid)) {
-            WorldPoint location = ModelHash.getWorldTemplateLocation(client, x, z);
-            for (AABB aabb : aabbs)
-                if (aabb.contains(location))
-                    return true;
-        }
+			if (!first) {
+				clientThread.invoke(() -> {
+					modelPusher.clearModelCache();
+					if (client.getGameState() == GameState.LOGGED_IN)
+						client.setGameState(GameState.LOADING);
+				});
+			}
+		});
+	}
 
-        return false;
-    }
+	public void shutDown() {
+		if (fileWatcher != null)
+			fileWatcher.unregister();
+		fileWatcher = null;
 
-    private boolean hasNoActions(long uuid) {
-        int id = ModelHash.getIdOrIndex(uuid);
-        int type = ModelHash.getType(uuid);
+		modelOverrides.clear();
+	}
 
-        String[] actions = {};
+	public void reload() {
+		shutDown();
+		startUp();
+	}
 
-        switch (type) {
-            case ModelHash.TYPE_OBJECT:
-                actions = client.getObjectDefinition(id).getActions();
-                break;
-            case ModelHash.TYPE_NPC:
-                actions = client.getNpcDefinition(id).getActions();
-                break;
-        }
+	private void addOverride(ModelOverride override) {
+		if (override.seasonalTheme != null && override.seasonalTheme != plugin.configSeasonalTheme)
+			return;
 
-        for (String action : actions) {
-            if (action != null)
-                return false;
-        }
+		for (int id : override.npcIds)
+			addEntry(ModelHash.TYPE_NPC, id, override);
+		for (int id : override.objectIds)
+			addEntry(ModelHash.TYPE_OBJECT, id, override);
+		for (int id : override.projectileIds)
+			addEntry(ModelHash.TYPE_PROJECTILE, id, override);
+		for (int id : override.graphicsObjectIds)
+			addEntry(ModelHash.TYPE_GRAPHICS_OBJECT, id, override);
+	}
 
-        return true;
-    }
+	private void addEntry(int type, int id, ModelOverride entry) {
+		int uuid = ModelHash.packUuid(type, id);
+		ModelOverride current = modelOverrides.get(uuid);
 
-    @NonNull
-    public ModelOverride getOverride(long hash) {
-        return modelOverrides.getOrDefault(ModelHash.getUuid(client, hash), ModelOverride.NONE);
-    }
+		if (current != null && !Objects.equals(current.seasonalTheme, entry.seasonalTheme)) {
+			// Seasonal theme overrides should take precedence
+			if (current.seasonalTheme != null)
+				return;
+			current = null;
+		}
+
+		boolean isDuplicate = false;
+
+		if (entry.areas.length == 0) {
+			// Non-area-restricted override, of which there can only be one per UUID
+
+			// A dummy override is used as the base if only area-specific overrides exist
+			isDuplicate = current != null && !current.isDummy;
+
+			if (current != null && current.areaOverrides != null && !current.areaOverrides.isEmpty()) {
+				var areaOverrides = current.areaOverrides;
+				current = entry.copy();
+				current.areaOverrides = areaOverrides;
+			} else {
+				current = entry;
+			}
+
+			modelOverrides.put(uuid, current);
+		} else {
+			if (current == null)
+				current = ModelOverride.NONE;
+
+			if (current.areaOverrides == null) {
+				// We need to replace the override with a copy that has a separate list of area overrides to avoid conflicts
+				current = current.copy();
+				current.areaOverrides = new HashMap<>();
+				modelOverrides.put(uuid, current);
+			}
+
+			for (var area : entry.areas)
+				current.areaOverrides.put(area, entry);
+		}
+
+		if (isDuplicate && Props.DEVELOPMENT) {
+			// This should ideally not be reached, so print helpful warnings in development mode
+			if (entry.hideInAreas.length > 0) {
+				System.err.printf(
+					"Replacing ID %d from '%s' with hideInAreas-override '%s'. This is likely a mistake...\n",
+					id, current.description, entry.description
+				);
+			} else {
+				System.err.printf(
+					"Replacing ID %d from '%s' with '%s'. The first-mentioned override should be removed.\n",
+					id, current.description, entry.description
+				);
+			}
+		}
+	}
+
+	@Nonnull
+	public ModelOverride getOverride(int uuid, int[] worldPos) {
+		var override = modelOverrides.get(uuid);
+		if (override == null)
+			return ModelOverride.NONE;
+
+		if (override.areaOverrides != null)
+			for (var entry : override.areaOverrides.entrySet())
+				if (entry.getKey().contains(worldPos))
+					return entry.getValue();
+
+		return override;
+	}
 }
