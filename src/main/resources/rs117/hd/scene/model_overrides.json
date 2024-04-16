@@ -1396,6 +1396,7 @@
       8534,
       9714,
       10822,
+      42391,
       42427
     ],
     "uvType": "BOX",
@@ -2543,14 +2544,6 @@
     "uvScale": 1.2
   },
   {
-    "description": "KOUREND_PATH_STEPS",
-    "baseMaterial": "GRUNGE_2",
-    "objectIds": [
-      30599,
-      30600
-    ]
-  },
-  {
     "description": "KOUREND_WALLS",
     "baseMaterial": "GRUNGE_1",
     "objectIds": [
@@ -2623,8 +2616,7 @@
       14560,
       14632,
       42110,
-      42111,
-      42116
+      42111
     ],
     "uvType": "BOX",
     "flatNormals": true
@@ -3878,9 +3870,20 @@
     "description": "WOODEN_PLANK_ROUGH",
     "baseMaterial": "WOOD_GRAIN_2",
     "objectIds": [
-      42036
+      42036,
+      42223,
+      42224
     ],
     "uvType": "BOX"
+  },
+  {
+    "description": "Rough Wooden Plant - Rotated",
+    "baseMaterial": "WOOD_GRAIN_2",
+    "objectIds": [
+      42037
+    ],
+    "uvType": "BOX",
+    "uvOrientation": 512
   },
   {
     "description": "DOCK_FENCES",
@@ -4159,7 +4162,8 @@
       27645,
       27646,
       27650,
-      27651
+      27651,
+      42661
     ],
     "uvType": "MODEL_XZ"
   },
@@ -4449,7 +4453,9 @@
       25598,
       25678,
       25679,
-      25680
+      25680,
+      41765,
+      50054
     ],
     "uvType": "WORLD_XZ",
     "flatNormals": true
@@ -4920,13 +4926,16 @@
     "flatNormals": true
   },
   {
-    "description": "Camelot stone wall",
-    "baseMaterial": "STONE",
+    "description": "Stone block wall - Light",
+    "baseMaterial": "STONE_NORMALED",
     "objectIds": [
       26134,
       26135,
       26136
-    ]
+    ],
+    "uvType": "BOX",
+    "uvScale": 0.8,
+    "uvOrientation": 256
   },
   {
     "description": "West Ardougne Carpet",
@@ -6177,6 +6186,7 @@
       14384,
       14385,
       14386,
+      14387,
       14389,
       14450,
       14451,
@@ -6813,8 +6823,14 @@
     "baseMaterial": "STONE",
     "objectIds": [
       5307,
-      5460
-    ]
+      5460,
+      30599,
+      30600,
+      30601
+    ],
+    "uvType": "BOX",
+    "uvOrientation": 602,
+    "uvScale": 0.85
   },
   {
     "description": "Stone - Stairs - Stone Brick",
@@ -6967,7 +6983,8 @@
     "baseMaterial": "WOOD_GRAIN_3",
     "objectIds": [
       9535,
-      41739
+      41739,
+      42069
     ],
     "uvType": "BOX",
     "flatNormals": true,
@@ -7003,7 +7020,8 @@
     "baseMaterial": "WOOD_GRAIN_3",
     "objectIds": [
       15693,
-      42068
+      42068,
+      42070
     ],
     "uvType": "BOX",
     "flatNormals": true,
@@ -7797,6 +7815,7 @@
       11603,
       12407,
       14872,
+      15039,
       15679,
       16246,
       16875,
@@ -7811,6 +7830,7 @@
       23179,
       24089,
       39718,
+      42092,
       43766
     ],
     "uvType": "BOX",
@@ -7863,6 +7883,7 @@
     "description": "Objects - Table - Single - Wooden – Plank - Generic",
     "baseMaterial": "WOOD_GRAIN_3",
     "objectIds": [
+      15044,
       17662
     ],
     "uvType": "BOX",
@@ -8561,6 +8582,16 @@
       14853
     ],
     "uvType": "BOX"
+  },
+  {
+    "description": "Objects - Wooden - Chair - High poly mesh",
+    "baseMaterial": "WOOD_GRAIN_3",
+    "objectIds": [
+      27513
+    ],
+    "uvType": "BOX",
+    "uvOrientation": 512,
+    "uvScale": 0.6
   },
   {
     "description": "Objects - Wooden - Tables - Round",
@@ -9856,7 +9887,8 @@
     "objectIds": [
       9616,
       10485,
-      10486
+      10486,
+      15040
     ],
     "uvType": "BOX",
     "uvOrientationY": 512
@@ -10350,6 +10382,7 @@
     "objectIds": [
       3025,
       12394,
+      14743,
       16867,
       16868,
       16870,
@@ -11102,7 +11135,8 @@
     "description": "Generic - Plank - Tables - Picnic Bench - Rotated",
     "baseMaterial": "WOOD_GRAIN_3",
     "objectIds": [
-      39687
+      39687,
+      15041
     ],
     "flatNormals": true,
     "uvType": "BOX",
@@ -11133,7 +11167,10 @@
     "description": "Objects - Wooden - Battlements and Scaffold",
     "baseMaterial": "WOOD_GRAIN_3",
     "objectIds": [
-      1612
+      1612,
+      42076,
+      42077,
+      42078
     ],
     "uvType": "BOX",
     "uvScale": 0.85,
@@ -11575,12 +11612,15 @@
     "uvOrientation": 512
   },
   {
-    "description": "Ferox Enclave - Wooden Plank Stairs ",
-    "baseMaterial": "WOOD_GRAIN_2",
+    "description": "Rough Wooden Plank Stairs ",
+    "baseMaterial": "WOOD_GRAIN_3",
     "objectIds": [
-      39643
+      39643,
+      42040
     ],
-    "uvType": "BOX"
+    "uvType": "BOX",
+    "uvOrientation": 512,
+    "uvScale": 1.1
   },
   {
     "description": "Ground Decoration - Flat Rocks - Small",
@@ -14705,15 +14745,31 @@
   {
     "description": "Ground Objects - Wooden - Planks",
     "baseMaterial": "WOOD_GRAIN_3",
-    "objectIds": [ 42416, 42417 ],
+    "objectIds": [ 42416, 42417, 42418, 42419 ],
     "uvType": "BOX",
     "uvOrientation": 512,
     "uvScale": 1.1
   },
   {
+    "description": "Ground Objects - Wooden - Planks - Rotated",
+    "baseMaterial": "WOOD_GRAIN_3",
+    "objectIds": [ 42420 ],
+    "uvType": "BOX",
+    "uvOrientation": 320,
+    "uvScale": 1.1
+  },
+  {
+    "description": "Ground Objects - Wooden - Planks - Rotated",
+    "baseMaterial": "WOOD_GRAIN_3",
+    "objectIds": [ 42421 ],
+    "uvType": "BOX",
+    "uvOrientation": 700,
+    "uvScale": 1.1
+  },
+  {
     "description": "Ground Objects - Wooden - Planks - Diag",
     "baseMaterial": "WOOD_GRAIN_3",
-    "objectIds": [ 42423 ],
+    "objectIds": [  42422, 42423 ],
     "uvType": "BOX",
     "uvOrientation": 256,
     "uvScale": 1.1
@@ -17203,5 +17259,36 @@
     ],
     "uvType": "BOX",
     "uvScale": 0.6
+  },
+  {
+    "description": "Objects - Wooden - Crate - High poly mesh",
+    "baseMaterial": "WOOD_GRAIN_3",
+    "objectIds": [
+      27532
+    ],
+    "uvType": "BOX",
+    "flatNormals": true,
+    "uvOrientationY": 475,
+    "uvOrientationZ": 512
+  },
+  {
+    "description": "Objects - Wooden - Stacked Crates - High poly mesh",
+    "baseMaterial": "WOOD_GRAIN_3",
+    "objectIds": [
+      27533
+    ],
+    "uvType": "BOX",
+    "flatNormals": true,
+    "uvOrientationY": 600,
+    "uvOrientationZ": 512
+  },
+  {
+    "description": "Tent - High poly mesh",
+    "baseMaterial": "FINE_CARPET",
+    "objectIds": [
+      23061,
+      42044
+    ],
+    "uvType": "BOX"
   }
 ]
