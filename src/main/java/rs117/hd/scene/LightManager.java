@@ -286,7 +286,7 @@ public class LightManager {
 					// Some NPCs, such as Crystalline Hunllef in The Gauntlet, sometimes return scene X/Y values far outside the possible range.
 					Tile tile;
 					if (tileExX >= 0 && tileExY >= 0 &&
-						tileExX < EXTENDED_SCENE_SIZE && tileExY < EXTENDED_SCENE_SIZE &&
+						tileExX < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE && tileExY < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE &&
 						(tile = tiles[plane][tileExX][tileExY]) != null
 					) {
 						// Check if the actor is hidden by another actor on the same tile
@@ -384,7 +384,7 @@ public class LightManager {
 				light.aboveFloor = false;
 				int tileExX = light.pos[0] / LOCAL_TILE_SIZE + SceneUploader.SCENE_OFFSET;
 				int tileExY = light.pos[2] / LOCAL_TILE_SIZE + SceneUploader.SCENE_OFFSET;
-				if (light.plane >= 0 && tileExX >= 0 && tileExY >= 0 && tileExX < EXTENDED_SCENE_SIZE && tileExY < EXTENDED_SCENE_SIZE) {
+				if (light.plane >= 0 && tileExX >= 0 && tileExY >= 0 && tileExX < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE && tileExY < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE) {
 					Tile tileAbove = light.plane < 3 ? tiles[light.plane + 1][tileExX][tileExY] : null;
 					if (tileAbove != null && (tileAbove.getSceneTilePaint() != null || tileAbove.getSceneTileModel() != null))
 						light.belowFloor = true;
@@ -857,8 +857,8 @@ public class LightManager {
 				int lightZ = lp.getY();
 				int plane = tileObject.getPlane();
 
-				int tileExX = HDUtils.clamp(lp.getSceneX() + SceneUploader.SCENE_OFFSET, 0, EXTENDED_SCENE_SIZE - 2);
-				int tileExY = HDUtils.clamp(lp.getSceneY() + SceneUploader.SCENE_OFFSET, 0, EXTENDED_SCENE_SIZE - 2);
+				int tileExX = HDUtils.clamp(lp.getSceneX() + SceneUploader.SCENE_OFFSET, 0, HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE - 2);
+				int tileExY = HDUtils.clamp(lp.getSceneY() + SceneUploader.SCENE_OFFSET, 0, HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE - 2);
 				float lerpX = (lightX % LOCAL_TILE_SIZE) / (float) LOCAL_TILE_SIZE;
 				float lerpZ = (lightZ % LOCAL_TILE_SIZE) / (float) LOCAL_TILE_SIZE;
 				int tileZ = HDUtils.clamp(plane, 0, MAX_Z - 1);
@@ -909,7 +909,7 @@ public class LightManager {
 		LocalPoint lp = firstlp.get();
 		int tileExX = lp.getSceneX() + SceneUploader.SCENE_OFFSET;
 		int tileExY = lp.getSceneY() + SceneUploader.SCENE_OFFSET;
-		if (tileExX < 0 || tileExY < 0 || tileExX >= EXTENDED_SCENE_SIZE || tileExY >= EXTENDED_SCENE_SIZE)
+		if (tileExX < 0 || tileExY < 0 || tileExX >= HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE || tileExY >= HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE)
 			return;
 
 		light.origin[0] = lp.getX() + LOCAL_HALF_TILE_SIZE;

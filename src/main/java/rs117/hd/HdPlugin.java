@@ -142,6 +142,7 @@ import static rs117.hd.utils.ResourcePath.path;
 @PluginDependency(EntityHiderPlugin.class)
 @Slf4j
 public class HdPlugin extends Plugin implements DrawCallbacks {
+	public static final int CUSTOM_EXTENDED_SCENE_SIZE = 104;
 	public static final String DISCORD_URL = "https://discord.gg/U4p6ChjgSE";
 	public static final String RUNELITE_URL = "https://runelite.net";
 	public static final String AMD_DRIVER_URL = "https://www.amd.com/en/support";
@@ -161,7 +162,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 
 	public static final float NEAR_PLANE = 1;
 	public static final int MAX_FACE_COUNT = 6144;
-	public static final int MAX_DISTANCE = EXTENDED_SCENE_SIZE;
+	public static final int MAX_DISTANCE = CUSTOM_EXTENDED_SCENE_SIZE;
 	public static final int GROUND_MIN_Y = 350; // how far below the ground models extend
 	public static final int MAX_FOG_DEPTH = 100;
 	public static final int SCALAR_BYTES = 4;
@@ -1365,7 +1366,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 	}
 
 	private void initTileHeightMap(Scene scene) {
-		final int TILE_HEIGHT_BUFFER_SIZE = Constants.MAX_Z * EXTENDED_SCENE_SIZE * EXTENDED_SCENE_SIZE * Short.BYTES;
+		final int TILE_HEIGHT_BUFFER_SIZE = Constants.MAX_Z * CUSTOM_EXTENDED_SCENE_SIZE * CUSTOM_EXTENDED_SCENE_SIZE * Short.BYTES;
 		ShortBuffer tileBuffer = ByteBuffer
 			.allocateDirect(TILE_HEIGHT_BUFFER_SIZE)
 			.order(ByteOrder.nativeOrder())
@@ -1373,8 +1374,8 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 
 		int[][][] tileHeights = scene.getTileHeights();
 		for (int z = 0; z < Constants.MAX_Z; ++z) {
-			for (int y = 0; y < EXTENDED_SCENE_SIZE; ++y) {
-				for (int x = 0; x < EXTENDED_SCENE_SIZE; ++x) {
+			for (int y = 0; y < CUSTOM_EXTENDED_SCENE_SIZE; ++y) {
+				for (int x = 0; x < CUSTOM_EXTENDED_SCENE_SIZE; ++x) {
 					int h = tileHeights[z][x][y];
 					assert (h & 0b111) == 0;
 					h >>= 3;
@@ -1393,7 +1394,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexImage3D(GL_TEXTURE_3D, 0, GL_R16I,
-			EXTENDED_SCENE_SIZE, EXTENDED_SCENE_SIZE, Constants.MAX_Z,
+			CUSTOM_EXTENDED_SCENE_SIZE, CUSTOM_EXTENDED_SCENE_SIZE, Constants.MAX_Z,
 			0, GL_RED_INTEGER, GL_SHORT, tileBuffer
 		);
 
@@ -2921,7 +2922,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 				if (ModelHash.getType(hash) == ModelHash.TYPE_OBJECT) {
 					int tileExX = localPos[0] / LOCAL_TILE_SIZE + SCENE_OFFSET;
 					int tileExY = localPos[1] / LOCAL_TILE_SIZE + SCENE_OFFSET;
-					if (0 <= tileExX && tileExX < EXTENDED_SCENE_SIZE && 0 <= tileExY && tileExY < EXTENDED_SCENE_SIZE) {
+					if (0 <= tileExX && tileExX < CUSTOM_EXTENDED_SCENE_SIZE && 0 <= tileExY && tileExY < CUSTOM_EXTENDED_SCENE_SIZE) {
 						Tile tile = sceneContext.scene.getExtendedTiles()[plane][tileExX][tileExY];
 						int config;
 						if (tile != null && (config = sceneContext.getObjectConfig(tile, hash)) != -1) {

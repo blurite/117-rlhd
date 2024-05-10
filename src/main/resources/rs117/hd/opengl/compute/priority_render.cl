@@ -237,7 +237,7 @@ void insert_dfs(__local struct shared_data *shared, uint localId, struct ModelIn
 }
 
 int tile_height(read_only image3d_t tileHeightMap, int z, int x, int y) {
-  #define ESCENE_OFFSET 40 // (184-104)/2
+  #define ESCENE_OFFSET 0 // (184-104)/2
   const sampler_t tileHeightSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE;
   int4 coord = (int4)(x + ESCENE_OFFSET, y + ESCENE_OFFSET, z, 0);
   return read_imagei(tileHeightMap, tileHeightSampler, coord).x << 3;

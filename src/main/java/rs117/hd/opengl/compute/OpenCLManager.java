@@ -369,12 +369,12 @@ public class OpenCLManager {
 			clReleaseMemObject(tileHeightMap);
 		tileHeightMap = 0;
 
-		final int TILEHEIGHT_BUFFER_SIZE = Constants.MAX_Z * Constants.EXTENDED_SCENE_SIZE * Constants.EXTENDED_SCENE_SIZE * Short.BYTES;
+		final int TILEHEIGHT_BUFFER_SIZE = Constants.MAX_Z * HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE * HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE * Short.BYTES;
 		ShortBuffer tileBuffer = BufferUtils.createShortBuffer(TILEHEIGHT_BUFFER_SIZE);
 		int[][][] tileHeights = scene.getTileHeights();
 		for (int z = 0; z < Constants.MAX_Z; ++z) {
-			for (int y = 0; y < Constants.EXTENDED_SCENE_SIZE; ++y) {
-				for (int x = 0; x < Constants.EXTENDED_SCENE_SIZE; ++x) {
+			for (int y = 0; y < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE; ++y) {
+				for (int x = 0; x < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE; ++x) {
 					int h = tileHeights[z][x][y];
 					assert (h & 0b111) == 0;
 					h >>= 3;
@@ -391,7 +391,7 @@ public class OpenCLManager {
 
 			IntBuffer errcode_ret = stack.callocInt(1);
 			tileHeightMap = clCreateImage3D(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, imageFormat,
-				Constants.EXTENDED_SCENE_SIZE, Constants.EXTENDED_SCENE_SIZE, Constants.MAX_Z,
+				HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE, HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE, Constants.MAX_Z,
 				0L, 0L,
 				tileBuffer,
 				errcode_ret
