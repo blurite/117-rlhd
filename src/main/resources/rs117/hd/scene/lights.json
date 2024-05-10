@@ -1,5 +1,788 @@
 [
   {
+    "description": "FIST_OF_GUTHIX_ENERGY_BARRIER",
+    "height": 100,
+    "alignment": "CENTER",
+    "radius": 500,
+    "strength": 7,
+    "color": [
+      68,
+      235,
+      146
+    ],
+    "type": "FLICKER",
+    "duration": 200,
+    "range": 3,
+    "objectIds": [
+      64246
+    ]
+  },
+  {
+    "description": "FIST_OF_GUTHIX_INNER_PORTAL",
+    "height": 120,
+    "alignment": "CENTER",
+    "radius": 400,
+    "strength": 15,
+    "color": [
+      17,
+      237,
+      120
+    ],
+    "type": "PULSE",
+    "duration": 1500,
+    "range": 25,
+    "objectIds": [
+      64242
+    ]
+  },
+  {
+    "description": "FIST_OF_GUTHIX_STONE_DISPENSER",
+    "height": 200,
+    "alignment": "CENTER",
+    "radius": 300,
+    "strength": 25,
+    "color": [
+      255,
+      255,
+      255
+    ],
+    "type": "PULSE",
+    "duration": 1000,
+    "range": 25,
+    "objectIds": [
+      64245
+    ]
+  },
+  {
+    "description": "FIST_OF_GUTHIX_STONE_WALL_CRACKS",
+    "height": 100,
+    "alignment": "CENTER",
+    "radius": 150,
+    "strength": 15,
+    "color": [
+      255,
+      255,
+      255
+    ],
+    "type": "PULSE",
+    "duration": 1000,
+    "range": 25,
+    "objectIds": [
+      64195
+    ]
+  },
+  {
+    "description": "FIST_OF_GUTHIX_CENTER",
+    "worldX": 1855,
+    "worldY": 6847,
+    "plane": 0,
+    "height": 20,
+    "alignment": "CENTER",
+    "radius": 800,
+    "strength": 15,
+    "color": [
+      201,
+      255,
+      236
+    ],
+    "type": "PULSE",
+    "duration": 7000,
+    "range": 10
+  },
+  {
+    "description": "FIST_OF_GUTHIX_CENTER",
+    "worldX": 1856,
+    "worldY": 6847,
+    "plane": 0,
+    "height": 20,
+    "alignment": "CENTER",
+    "radius": 800,
+    "strength": 15,
+    "color": [
+      201,
+      255,
+      236
+    ],
+    "type": "PULSE",
+    "duration": 7000,
+    "range": 10
+  },
+  {
+    "description": "FIST_OF_GUTHIX_CENTER",
+    "worldX": 1855,
+    "worldY": 6848,
+    "plane": 0,
+    "height": 20,
+    "alignment": "CENTER",
+    "radius": 800,
+    "strength": 15,
+    "color": [
+      201,
+      255,
+      236
+    ],
+    "type": "PULSE",
+    "duration": 7000,
+    "range": 10
+  },
+  {
+    "description": "FIST_OF_GUTHIX_CENTER",
+    "worldX": 1856,
+    "worldY": 6848,
+    "plane": 0,
+    "height": 20,
+    "alignment": "CENTER",
+    "radius": 800,
+    "strength": 15,
+    "color": [
+      201,
+      255,
+      236
+    ],
+    "type": "PULSE",
+    "duration": 7000,
+    "range": 10
+  },
+  {
+    "description": "FIST_OF_GUTHIX_PORTAL",
+    "height": 180,
+    "alignment": "CENTER",
+    "radius": 700,
+    "strength": 15,
+    "color": [
+      93,
+      0,
+      255
+    ],
+    "type": "PULSE",
+    "duration": 400,
+    "range": 20,
+    "objectIds": [
+      64149
+    ]
+  },
+  {
+    "description": "FIST_OF_GUTHIX_TORCHES",
+    "height": 250,
+    "alignment": "CENTER",
+    "radius": 500,
+    "strength": 12.5,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      64135,
+      64157
+    ]
+  },
+  {
+    "description": "SCOURGES_HOUSE_LANTERNS",
+    "worldX": 1184,
+    "worldY": 6664,
+    "plane": 0,
+    "height": 250,
+    "alignment": "FRONT",
+    "radius": 800,
+    "strength": 15,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 3
+  },
+  {
+    "description": "SCOURGES_HOUSE_LANTERNS",
+    "worldX": 1185,
+    "worldY": 6664,
+    "plane": 0,
+    "height": 250,
+    "alignment": "FRONT",
+    "radius": 400,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20
+  },
+  {
+    "description": "SCOURGES_HOUSE_CANDLES",
+    "height": 175,
+    "alignment": "CENTER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      64280,
+      64274,
+      64279
+    ]
+  },
+  {
+    "description": "SCOURGES_HOUSE_CANDLES",
+    "height": 250,
+    "alignment": "FRONT",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      64277,
+      64278
+    ]
+  },
+  {
+    "description": "SCOURGES_HOUSE_CANDLES",
+    "height": 200,
+    "alignment": "CENTER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      64288,
+      64289
+    ]
+  },
+  {
+    "description": "COCKROACH_DUNGEON_MOSS",
+    "height": 100,
+    "alignment": "CENTER",
+    "radius": 300,
+    "strength": 10,
+    "color": [
+      133,
+      219,
+      47
+    ],
+    "type": "PULSE",
+    "duration": 500,
+    "range": 3,
+    "objectIds": [
+      64560,
+      64559,
+      64556,
+      64520,
+      64519,
+      64556,
+      64543,
+      64545,
+      64548,
+      64550,
+      64544,
+      64542,
+      64620
+    ]
+  },
+  {
+    "description": "COCKROACH_DUNGEON_PRISON_CANDLES",
+    "height": 300,
+    "alignment": "CENTER",
+    "radius": 200,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      64510
+    ]
+  },
+
+  {
+    "description": "SPIDER_REALM_LEVEL_THREE_LIGHT",
+    "height": 250,
+    "alignment": "CENTER",
+    "radius": 1000,
+    "strength": 8,
+    "color": [
+      255,
+      255,
+      255
+    ],
+    "type": "PULSE",
+    "duration": 3000,
+    "range": 5,
+    "worldX": 2080,
+    "worldY": 7195
+  },
+  {
+    "description": "SPIDER_REALM_LEVEL_FOUR_EGGS",
+    "height": 150,
+    "alignment": "CENTER",
+    "radius": 250,
+    "strength": 15,
+    "color": [
+      133,
+      219,
+      47
+    ],
+    "type": "PULSE",
+    "duration": 3000,
+    "range": 7,
+    "objectIds": [
+      63299,
+      63300,
+      63301
+    ]
+  },
+  {
+    "description": "SPIDER_REALM_LEVEL_ONE_EGGS",
+    "height": 0,
+    "alignment": "CENTER",
+    "radius": 400,
+    "strength": 25,
+    "color": [
+      133,
+      219,
+      47
+    ],
+    "type": "PULSE",
+    "duration": 2000,
+    "range": 20,
+    "objectIds": [
+      63288
+    ]
+  },
+  {
+    "description": "SPIDER_REALM_LEVEL_TWO_EGGS_NEST",
+    "height": 150,
+    "alignment": "CENTER",
+    "radius": 400,
+    "strength": 25,
+    "color": [
+      133,
+      219,
+      47
+    ],
+    "type": "PULSE",
+    "duration": 2000,
+    "range": 20,
+    "worldX": 2080,
+    "worldY": 7600,
+    "plane": 2
+  },
+
+  {
+    "description": "SPIDER_REALM_LEVEL_TWO_EGGS_NEST_TREE",
+    "height": 150,
+    "alignment": "CENTER",
+    "radius": 500,
+    "strength": 25,
+    "color": [
+      133,
+      219,
+      47
+    ],
+    "type": "PULSE",
+    "duration": 2000,
+    "range": 20,
+    "objectIds": [
+      63131
+    ]
+  },
+  {
+    "description": "SPIDER_REALM_LEVEL_TWO_EGGS_NEST_TREE2",
+    "height": 250,
+    "alignment": "CENTER",
+    "radius": 500,
+    "strength": 25,
+    "color": [
+      133,
+      219,
+      47
+    ],
+    "type": "PULSE",
+    "duration": 2000,
+    "range": 20,
+    "objectIds": [
+      63130,
+      63128,
+      63129
+    ]
+  },
+  {
+    "description": "GRIM_REAPER_HOUSE_CANDLETANDS",
+    "height": 200,
+    "alignment": "CENTER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      63380,
+      63381,
+      63382,
+      63383,
+      63384,
+      63385,
+      63386,
+      63387,
+      63388,
+      63389,
+      63390,
+      63394,
+      63494,
+      63587,
+      63589,
+      63597,
+      63588,
+      63593,
+      63596,
+      63584,
+      63586,
+      63590,
+      63592,
+      63493
+    ]
+  },
+  {
+    "description": "GRIM_REAPER_HOUSE_FIREPLACE",
+    "height": 20,
+    "alignment": "CENTER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      63404,
+      63400
+    ]
+  },
+  {
+    "description": "GRIM_REAPER_HOUSE_WALL_CANDLES",
+    "height": 250,
+    "alignment": "FRONT",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      63509
+    ]
+  },
+  {
+    "description": "GRIM_REAPER_HOUSE_CANDLE_TABLE",
+    "height": 200,
+    "alignment": "CENTER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      63481
+    ]
+  },
+
+  {
+    "description": "GRIM_REAPER_HOUSE_STAIRCASE_DS_1",
+    "height": 200,
+    "alignment": "SOUTHWEST_CORNER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "worldX": 2079,
+    "worldY": 6818,
+    "plane": 0
+  },
+  {
+    "description": "GRIM_REAPER_HOUSE_STAIRCASE_DS_2",
+    "height": 200,
+    "alignment": "NORTHWEST_CORNER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "worldX": 2079,
+    "worldY": 6821,
+    "plane": 0
+  },
+  {
+    "description": "GRIM_REAPER_HOUSE_STAIRCASE_US_1",
+    "height": 200,
+    "alignment": "SOUTHEAST_CORNER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "worldX": 2075,
+    "worldY": 6819,
+    "plane": 1
+  },
+  {
+    "description": "GRIM_REAPER_HOUSE_STAIRCASE_US_2",
+    "height": 200,
+    "alignment": "NORTHEAST_CORNER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "worldX": 2075,
+    "worldY": 6820,
+    "plane": 1
+  },
+  {
+    "description": "GRIM_REAPER_HOUSE_PORTAL",
+    "height": 180,
+    "alignment": "CENTER",
+    "radius": 400,
+    "strength": 15,
+    "color": [
+      161,
+      102,
+      190
+    ],
+    "type": "PULSE",
+    "duration": 400,
+    "range": 20,
+    "objectIds": [
+      63305,
+      63624
+    ]
+  },
+  {
+    "description": "GAMERS_GROTTO_SC_PORTAL_FRONT",
+    "height": 280,
+    "alignment": "CENTER",
+    "radius": 700,
+    "strength": 25,
+    "color": [
+      82, 24, 139
+    ],
+    "type": "PULSE",
+    "duration": 2000,
+    "range": 20,
+    "worldX": 1176,
+    "worldY": 7599
+  },
+
+  {
+    "description": "GAMERS_GROTTO_SC_PORTAL_BACK",
+    "height": 280,
+    "alignment": "CENTER",
+    "radius": 700,
+    "strength": 25,
+    "color": [
+      82, 24, 139
+    ],
+    "type": "PULSE",
+    "duration": 2000,
+    "range": 20,
+    "worldX": 1176,
+    "worldY": 7600
+  },
+  {
+    "description": "GAMERS_GROTTO_PURPLE_PORTAL",
+    "height": 180,
+    "alignment": "WEST",
+    "radius": 600,
+    "strength": 25,
+    "color": [
+      128, 30, 255
+    ],
+    "type": "PULSE",
+    "duration": 400,
+    "range": 5,
+    "worldX": 1201,
+    "worldY": 7564,
+    "fadeInDuration": 0
+  },
+  {
+    "description": "GAMERS_GROTTO_FIST_OF_GUTHIX_PORTAL",
+    "height": 180,
+    "alignment": "WEST",
+    "radius": 600,
+    "strength": 25,
+    "color": [
+      128, 30, 255
+    ],
+    "type": "PULSE",
+    "duration": 400,
+    "range": 5,
+    "worldX": 1178,
+    "worldY": 7560,
+    "fadeInDuration": 0
+  },
+  {
+    "description": "GAMERS_GROTTO_FFA_SAFE_PORTAL",
+    "height": 180,
+    "alignment": "NORTH",
+    "radius": 600,
+    "strength": 25,
+    "color": [
+      255, 255, 255
+    ],
+    "type": "PULSE",
+    "duration": 400,
+    "range": 5,
+    "objectIds": [
+      63713
+    ],
+    "fadeInDuration": 0
+  },
+  {
+    "description": "GAMERS_GROTTO_FFA_DANGEROUS_PORTAL",
+    "height": 180,
+    "alignment": "NORTH",
+    "radius": 600,
+    "strength": 25,
+    "color": [
+      255, 59, 17
+    ],
+    "type": "PULSE",
+    "duration": 400,
+    "range": 5,
+    "objectIds": [
+      63712
+    ],
+    "fadeInDuration": 0
+  },
+  {
+    "description": "GAMERS_GROTTO_TORCHES",
+    "height": 150,
+    "alignment": "CENTER",
+    "radius": 100,
+    "strength": 25,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      63637
+    ]
+  },
+  {
+    "description": "STEALING_CREATION_BLUE_PORTAL",
+    "height": 100,
+    "alignment": "CENTER",
+    "radius": 500,
+    "strength": 7,
+    "color": [
+      103, 188, 240
+    ],
+    "type": "FLICKER",
+    "duration": 200,
+    "range": 3,
+    "objectIds": [
+      63953,
+      63870,
+      63869,
+      63952,
+      64070,
+      63871
+    ]
+  },
+  {
+    "description": "STEALING_CREATION_RED_PORTAL",
+    "height": 100,
+    "alignment": "CENTER",
+    "radius": 500,
+    "strength": 7,
+    "color": [
+      230, 68, 53
+    ],
+    "type": "FLICKER",
+    "duration": 200,
+    "range": 3,
+    "objectIds": [
+      63948,
+      63949,
+      63950,
+      63951,
+      64068,
+      64069
+    ]
+  },
+
+
+  {
     "description": "lava",
     "worldX": 2467,
     "worldY": 5174,

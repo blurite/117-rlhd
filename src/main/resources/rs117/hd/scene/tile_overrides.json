@@ -1,5 +1,13 @@
 [
   {
+    "name": "Land of Snow and Cockroach dungeon snow",
+    "underlayIds": [
+      1083, 1150, 1153, 1122
+    ],
+    "groundMaterial": "SNOW_1"
+  },
+
+  {
     "name": "DEFAULT_GRASS",
     "groundMaterial": "OVERWORLD_GRASS_1"
   },

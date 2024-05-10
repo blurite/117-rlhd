@@ -1322,6 +1322,137 @@
     ],
     "fogDepth": 40
   },
+
+  {
+    "area": "FIST_OF_GUTHIX_GAME",
+    "ambientColor": "#dbdbdb",
+    "ambientStrength": 1.0,
+    "directionalColor": "#a0a8a6",
+    "directionalStrength": 1.8,
+    "sunAngles": [
+      80,
+      190
+    ],
+    "fogColor": "#000000",
+    "fogDepth": 10
+  },
+  {
+    "area": "FIST_OF_GUTHIX",
+    "ambientColor": "#dbdbdb",
+    "ambientStrength": 1.0,
+    "directionalColor": "#a0a8a6",
+    "directionalStrength": 1.8,
+    "sunAngles": [
+      80,
+      190
+    ],
+    "fogColor": "#000000",
+    "fogDepth": 10
+  },
+  {
+    "area": "GAMERS_GROTTO",
+    "ambientColor": "#dbdbdb",
+    "ambientStrength": 1.8,
+    "directionalColor": "#a0a8a6",
+    "directionalStrength": 1.8,
+    "sunAngles": [
+      80,
+      190
+    ],
+    "fogColor": "#000000",
+    "fogDepth": 10
+  },
+  {
+    "area": "STEALING_CREATIONS",
+    "ambientColor": "#dbdbdb",
+    "ambientStrength": 1.8,
+    "directionalColor": "#a0a8a6",
+    "directionalStrength": 1.8,
+    "sunAngles": [
+      80,
+      190
+    ],
+    "fogColor": "#a0a8a6",
+    "fogDepth": 10
+  },
+  {
+    "area": "LAND_OF_SNOW",
+    "fogColor": "#c9d1d1",
+    "fogDepth": 10
+  },
+  {
+    "area": "SCOURGES_HOUSE",
+    "directionalColor": "#9ea3a8",
+    "directionalStrength": 2.5,
+    "fogColor": "#151c24",
+    "fogDepth": 10
+  },
+  {
+    "area": "COCKROACH_DUNGEON",
+    "ambientColor": "#aba090",
+    "ambientStrength": 1.0,
+    "directionalColor": "#aba090",
+    "directionalStrength": 1.8,
+    "sunAngles": [
+      80,
+      190
+    ],
+    "fogColor": "#1b150d",
+    "fogDepth": 10
+  },
+  {
+    "area": "COCKROACH_DUNGEON_PRISON",
+    "ambientColor": "#aba090",
+    "ambientStrength": 1.0,
+    "directionalColor": "#aba090",
+    "directionalStrength": 1.8,
+    "sunAngles": [
+      80,
+      190
+    ],
+    "fogColor": "#1b150d",
+    "fogDepth": 10
+  },
+  {
+    "area": "SPIDER_REALM",
+    "ambientColor": "#737373",
+    "ambientStrength": 1.0,
+    "directionalColor": "#ffffff",
+    "directionalStrength": 1.8,
+    "sunAngles": [
+      80,
+      190
+    ],
+    "fogColor": "#000000",
+    "fogDepth": 10
+  },
+  {
+    "area": "SPIDER_REALM_LEVEL_FOUR",
+    "ambientColor": "#4a4a4a",
+    "ambientStrength": 1.0,
+    "directionalColor": "#646464",
+    "directionalStrength": 1.8,
+    "sunAngles": [
+      90,
+      90
+    ],
+    "fogColor": "#000000",
+    "fogDepth": 10
+  },
+  {
+    "area": "GRIM_REAPERS_HOUSE",
+    "ambientColor": "#9891bf",
+    "ambientStrength": 1.0,
+    "directionalColor": "#ffffff",
+    "directionalStrength": 1.8,
+    "sunAngles": [
+      90,
+      90
+    ],
+    "fogColor": "#0a080d",
+    "fogDepth": 10
+  },
+
   {
     "area": "TEARS_OF_GUTHIX",
     "ambientColor": "#aaafb6",
