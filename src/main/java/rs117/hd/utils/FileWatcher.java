@@ -229,7 +229,7 @@ public class FileWatcher {
 			watchKeys.put(dir.register(watchService, eventKinds), dir);
 			log.debug("Watching {}", path);
 		} catch (Exception ex) {
-			throw new RuntimeException("Failed to register file watcher for path: " + path, ex);
+			log.info("Failed to register file watcher for path: " + path);
 		}
 	}
 
