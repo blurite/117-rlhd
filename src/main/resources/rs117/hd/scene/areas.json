@@ -5566,6 +5566,75 @@
       10831
     ]
   },
+
+  {
+    "name": "FIST_OF_GUTHIX_GAME",
+    "aabbs": [
+      [ 1792, 6784, 1920, 6912 ]
+    ]
+  },
+  {
+    "name": "FIST_OF_GUTHIX",
+    "aabbs": [
+      [ 1792, 6912, 1856, 6976 ],
+      [ 1792, 7040, 1856, 7104 ]
+    ]
+  },
+  {
+    "name": "GAMERS_GROTTO",
+    "aabbs": [
+      [ 1152, 7552, 1216, 7616 ]
+    ]
+  },
+  {
+    "name": "STEALING_CREATIONS",
+    "aabbs": [
+      [ 1792, 7168, 1856, 7232 ]
+    ]
+  },
+  {
+    "name": "LAND_OF_SNOW",
+    "aabbs": [
+      [ 1152, 6784, 1216, 6848 ]
+    ]
+  },
+  {
+    "name": "SCOURGES_HOUSE",
+    "aabbs": [
+      [ 1152, 6656, 1216, 6720 ]
+    ]
+  },
+  {
+    "name": "COCKROACH_DUNGEON",
+    "aabbs": [
+      [ 1152, 6400, 1216, 6464 ]
+    ]
+  },
+  {
+    "name": "COCKROACH_DUNGEON_PRISON",
+    "aabbs": [
+      [ 1152, 6528, 1216, 6596 ]
+    ]
+  },
+  {
+    "name": "SPIDER_REALM",
+    "aabbs": [
+      [ 2048, 7106, 2112, 7616 ]
+    ]
+  },
+  {
+    "name": "SPIDER_REALM_LEVEL_FOUR",
+    "aabbs": [
+      [ 2048, 7040, 2112, 7106 ]
+    ]
+  },
+  {
+    "name": "GRIM_REAPERS_HOUSE",
+    "aabbs": [
+      [ 2048, 6784, 2112, 6848 ]
+    ]
+  },
+
   {
     "name": "THE_SCAR_MAIN_AREA",
     "regions": [
