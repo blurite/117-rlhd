@@ -244,7 +244,7 @@ public class FileWatcher {
 					return FileVisitResult.CONTINUE;
 				}
 			});
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			throw new RuntimeException("Failed to register recursive file watcher for path: " + path, ex);
 		}
 	}

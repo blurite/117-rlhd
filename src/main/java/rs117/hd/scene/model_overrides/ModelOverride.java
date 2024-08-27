@@ -1,5 +1,7 @@
 package rs117.hd.scene.model_overrides;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.annotations.JsonAdapter;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,12 +15,14 @@ import rs117.hd.config.SeasonalTheme;
 import rs117.hd.config.VanillaShadowMode;
 import rs117.hd.data.materials.Material;
 import rs117.hd.data.materials.UvType;
-import rs117.hd.utils.AABB;
+import rs117.hd.scene.areas.AABB;
 import rs117.hd.utils.GsonUtils;
 import rs117.hd.utils.Props;
 import rs117.hd.utils.Vector;
 
 import static net.runelite.api.Perspective.*;
+import static rs117.hd.utils.ExpressionParser.asExpression;
+import static rs117.hd.utils.ExpressionParser.parseExpression;
 
 @Slf4j
 @NoArgsConstructor
@@ -60,6 +64,7 @@ public class ModelOverride
 	public boolean upwardsNormals = false;
 	public boolean hideVanillaShadows = false;
 	public boolean retainVanillaShadowsInPvm = false;
+	public boolean hideHdShadowsInPvm = false;
 	public boolean castShadows = true;
 	public boolean receiveShadows = true;
 	public float shadowOpacityThreshold = 0;
@@ -70,9 +75,18 @@ public class ModelOverride
 	public AABB[] hideInAreas = {};
 
 	public Map<Material, ModelOverride> materialOverrides;
+	public ModelOverride[] colorOverrides;
+
+	private JsonElement colors;
 
 	public transient boolean isDummy;
 	public transient Map<AABB, ModelOverride> areaOverrides;
+	public transient HslPredicate hslCondition;
+
+	@FunctionalInterface
+	public interface HslPredicate {
+		boolean test(int hsl);
+	}
 
 	public void normalize(VanillaShadowMode vanillaShadowMode) {
 		// Ensure there are no nulls in case of invalid configuration during development
@@ -120,6 +134,13 @@ public class ModelOverride
 			materialOverrides = normalized;
 		}
 
+		if (colorOverrides != null) {
+			for (var override : colorOverrides) {
+				override.normalize(vanillaShadowMode);
+				override.hslCondition = parseHslConditions(override.colors);
+			}
+		}
+
 		if (uvOrientationX == 0)
 			uvOrientationX = uvOrientation;
 		if (uvOrientationY == 0)
@@ -130,7 +151,7 @@ public class ModelOverride
 		if (retainVanillaShadowsInPvm) {
 			if (vanillaShadowMode.retainInPvm)
 				hideVanillaShadows = false;
-			if (vanillaShadowMode == VanillaShadowMode.PREFER_IN_PVM)
+			if (vanillaShadowMode == VanillaShadowMode.PREFER_IN_PVM && hideHdShadowsInPvm)
 				castShadows = false;
 		}
 
@@ -163,6 +184,7 @@ public class ModelOverride
 			upwardsNormals,
 			hideVanillaShadows,
 			retainVanillaShadowsInPvm,
+			hideHdShadowsInPvm,
 			castShadows,
 			receiveShadows,
 			shadowOpacityThreshold,
@@ -170,14 +192,97 @@ public class ModelOverride
 			inheritTileColorType,
 			hideInAreas,
 			materialOverrides,
+			colorOverrides,
+			colors,
 			isDummy,
-			areaOverrides
+			areaOverrides,
+			hslCondition
 		);
 	}
 
 	private ModelOverride(boolean isDummy) {
 		this();
 		this.isDummy = isDummy;
+	}
+
+	private HslPredicate parseHslConditions(JsonElement element) {
+		if (element == null)
+			return hsl -> false;
+
+		JsonArray arr;
+		if (element.isJsonArray()) {
+			arr = element.getAsJsonArray();
+		} else {
+			arr = new JsonArray();
+			arr.add(element);
+		}
+
+		HslPredicate combinedPredicate = null;
+
+		for (var el : arr) {
+			if (el.isJsonNull())
+				continue;
+			if (!el.isJsonPrimitive()) {
+				log.warn("Skipping unexpected HSL condition '{}' in override '{}'", el, description);
+				continue;
+			}
+
+			HslPredicate condition;
+			var prim = el.getAsJsonPrimitive();
+			if (prim.isBoolean()) {
+				boolean bool = prim.getAsBoolean();
+				condition = hsl -> bool;
+			} else if (prim.isNumber()) {
+				try {
+					int targetHsl = prim.getAsInt();
+					condition = hsl -> hsl == targetHsl;
+				} catch (Exception ex) {
+					log.warn("Expected integer, but got {} in override '{}'", el, description);
+					continue;
+				}
+			} else if (prim.isString()) {
+				var expr = asExpression(parseExpression(prim.getAsString()));
+
+				if (Props.DEVELOPMENT) {
+					// Ensure all variables are defined
+					final Set<String> knownVariables = Set.of("h", "s", "l", "hsl");
+					for (var variable : expr.variables)
+						if (!knownVariables.contains(variable))
+							throw new IllegalStateException(
+								"Expression '" + prim.getAsString() + "' contains unknown variable '" + variable + "'");
+				}
+
+				var predicate = expr.toPredicate();
+				condition = hsl -> predicate.test(key -> {
+					switch (key) {
+						default:
+						case "hsl":
+							return hsl;
+						case "h":
+							return hsl >>> 10 & 0x3F;
+						case "s":
+							return hsl >>> 7 & 0x7;
+						case "l":
+							return hsl & 0x7F;
+					}
+				});
+			} else {
+				log.warn("Skipping unexpected HSL condition primitive '{}' in override '{}'", el, description);
+				continue;
+			}
+
+			if (combinedPredicate == null) {
+				combinedPredicate = condition;
+			} else {
+				var prev = combinedPredicate;
+				combinedPredicate = hsl -> prev.test(hsl) || condition.test(hsl);
+			}
+		}
+
+		if (combinedPredicate == null)
+			return hsl -> false;
+
+		return combinedPredicate;
 	}
 
 	public void computeModelUvw(float[] out, int i, float x, float y, float z, int orientation) {
@@ -231,9 +336,9 @@ public class ModelOverride
 			case MODEL_YZ:
 			case MODEL_YZ_MIRROR_A:
 			case MODEL_YZ_MIRROR_B: {
-				final int[] vertexX = model.getVerticesX();
-				final int[] vertexY = model.getVerticesY();
-				final int[] vertexZ = model.getVerticesZ();
+				final float[] vertexX = model.getVerticesX();
+				final float[] vertexY = model.getVerticesY();
+				final float[] vertexZ = model.getVerticesZ();
 				final int triA = model.getFaceIndices1()[face];
 				final int triB = model.getFaceIndices2()[face];
 				final int triC = model.getFaceIndices3()[face];
@@ -252,9 +357,9 @@ public class ModelOverride
 				if (texFace != -1) {
 					texFace &= 0xff;
 
-					final int[] vertexX = model.getVerticesX();
-					final int[] vertexY = model.getVerticesY();
-					final int[] vertexZ = model.getVerticesZ();
+					final float[] vertexX = model.getVerticesX();
+					final float[] vertexY = model.getVerticesY();
+					final float[] vertexZ = model.getVerticesZ();
 					final int texA = model.getTexIndices1()[texFace];
 					final int texB = model.getTexIndices2()[texFace];
 					final int texC = model.getTexIndices3()[texFace];
@@ -287,7 +392,7 @@ public class ModelOverride
 	}
 
 	private void computeBoxUvw(float[] out, Model model, int modelOrientation, int face) {
-		final int[][] vertexXYZ = {
+		final float[][] vertexXYZ = {
 			model.getVerticesX(),
 			model.getVerticesY(),
 			model.getVerticesZ()

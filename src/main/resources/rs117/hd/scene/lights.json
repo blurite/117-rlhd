@@ -19158,6 +19158,25 @@
     ]
   },
   {
+    "description": "Waterfiend",
+    "height": 60,
+    "alignment": "CENTER",
+    "radius": 200,
+    "strength": 7.5,
+    "color": [
+      0,
+      220,
+      255
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "npcIds": [
+      2916,
+      2917
+    ]
+  },
+  {
     "description": "GHOST",
     "height": 80,
     "alignment": "CENTER",
@@ -19222,7 +19241,9 @@
       3452,
       3453,
       3454,
-      3455
+      3455,
+      10475,
+      11237
     ]
   },
   {
@@ -20665,10 +20686,10 @@
   },
   {
     "description": "STANDING_TORCH",
-    "height": 250,
+    "height": 200,
     "alignment": "CENTER",
     "radius": 500,
-    "strength": 5,
+    "strength": 9,
     "color": [
       252,
       148,
@@ -20725,6 +20746,26 @@
       5881,
       38555,
       33454
+    ],
+    "visibleFromOtherPlanes": true
+  },
+  {
+    "description": "STANDING_TORCH_VARLAMORE",
+    "height": 230,
+    "offset": [ 10, 0, 55 ],
+    "alignment": "CENTER",
+    "radius": 450,
+    "strength": 12.5,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      51759
     ],
     "visibleFromOtherPlanes": true
   },
@@ -20838,7 +20879,6 @@
       12300,
       31628,
       12238,
-      3474,
       43122,
       43123,
       43124,
@@ -20882,7 +20922,8 @@
       4501,
       5787,
       24414,
-      2175
+      2175,
+      30130
     ]
   },
   {
@@ -20941,9 +20982,8 @@
     ]
   },
   {
-    "description": "FLOOR_CANDLES_CENTER",
+    "description": "FLOOR_CANDLES_1",
     "height": 10,
-    "alignment": "CENTER",
     "radius": 300,
     "strength": 10,
     "color": [
@@ -20960,9 +21000,8 @@
     ]
   },
   {
-    "description": "FLOOR_CANDLES_BACK",
+    "description": "FLOOR_CANDLES_2",
     "height": 10,
-    "alignment": "BACK",
     "radius": 200,
     "strength": 10,
     "color": [
@@ -20975,7 +21014,8 @@
     "range": 20,
     "objectIds": [
       12302
-    ]
+    ],
+    "offset": [ 3, 0, 40 ]
   },
   {
     "description": "LANTERN",
@@ -20996,7 +21036,24 @@
       10307,
       16901,
       23577,
-      2492,
+      2492
+    ]
+  },
+  {
+    "description": "LANTERN_CANDLE",
+    "offset": [ 10, 260, -12 ],
+    "alignment": "CENTER",
+    "radius": 550,
+    "strength": 15.5,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
       11468
     ]
   },
@@ -21519,11 +21576,29 @@
     ]
   },
   {
-    "description": "EDGEVILLE_FURNACE",
+    "description": "Edgeville Furnace",
     "height": 40,
     "alignment": "CENTER",
     "radius": 700,
     "strength": 8.8,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 30,
+    "objectIds": [
+      16657,
+      16469
+    ]
+  },
+  {
+    "description": "Edgeville Furnace Hotspot",
+    "offset": [ 20, 30, 5 ],
+    "radius": 75,
+    "strength": 50,
     "color": [
       252,
       148,
@@ -22329,7 +22404,7 @@
     "description": "CASTLE_WARS_PORTAL",
     "height": 120,
     "alignment": "CENTER",
-    "radius": 600,
+    "radius": 500,
     "strength": 10,
     "color": [
       0,
@@ -22337,8 +22412,8 @@
       136
     ],
     "type": "PULSE",
-    "duration": 1550,
-    "range": 20,
+    "duration": 2550,
+    "range": 10,
     "objectIds": [
       30386
     ]
@@ -22355,8 +22430,8 @@
       136
     ],
     "type": "PULSE",
-    "duration": 1600,
-    "range": 20,
+    "duration": 13800,
+    "range": 5,
     "objectIds": [
       39640
     ]
@@ -22381,8 +22456,7 @@
   },
   {
     "description": "FEROX_BARRIER",
-    "height": 100,
-    "alignment": "CENTER",
+    "offset": [ -45, 100, 0 ],
     "radius": 400,
     "strength": 10,
     "color": [
@@ -22391,18 +22465,18 @@
       0
     ],
     "type": "PULSE",
-    "duration": 2050,
-    "range": 20,
+    "duration": 2650,
+    "range": 10,
     "objectIds": [
       39656
     ]
   },
   {
     "description": "FEROX_BOUNTY_HUNTER_PORTAL",
-    "height": 180,
+    "height": 50,
     "alignment": "CENTER",
-    "radius": 400,
-    "strength": 10,
+    "radius": 600,
+    "strength": 5,
     "color": [
       255,
       50,
@@ -22427,8 +22501,8 @@
       255
     ],
     "type": "PULSE",
-    "duration": 1750,
-    "range": 20,
+    "duration": 2750,
+    "range": 10,
     "objectIds": [
       26642
     ]
@@ -22437,7 +22511,7 @@
     "description": "FREE_FOR_ALL_PORTAL",
     "height": 120,
     "alignment": "CENTER",
-    "radius": 600,
+    "radius": 500,
     "strength": 10,
     "color": [
       255,
@@ -22445,8 +22519,8 @@
       255
     ],
     "type": "PULSE",
-    "duration": 1850,
-    "range": 20,
+    "duration": 2850,
+    "range": 10,
     "objectIds": [
       26645
     ]
@@ -22473,16 +22547,16 @@
     "description": "POOL_OF_REFRESHMENT",
     "height": 150,
     "alignment": "CENTER",
-    "radius": 400,
-    "strength": 10,
+    "radius": 300,
+    "strength": 15,
     "color": [
       31,
       225,
       255
     ],
     "type": "PULSE",
-    "duration": 1250,
-    "range": 20,
+    "duration": 1650,
+    "range": 5,
     "objectIds": [
       39651
     ]
@@ -22507,10 +22581,9 @@
   },
   {
     "description": "PURPLE_FLAME",
-    "height": 250,
-    "alignment": "CENTER",
-    "radius": 600,
-    "strength": 10,
+    "offset": [ -50, 400, 0 ],
+    "radius": 400,
+    "strength": 15,
     "color": [
       77,
       13,
@@ -22525,10 +22598,9 @@
   },
   {
     "description": "PURPLE_FLAME_LARGE",
-    "height": 250,
-    "alignment": "CENTER",
+    "offset": [ 0, 250, 0 ],
     "radius": 1200,
-    "strength": 10,
+    "strength": 12,
     "color": [
       77,
       13,
@@ -22543,10 +22615,9 @@
   },
   {
     "description": "DEATHS_OFFICE_PORTAL",
-    "height": 180,
-    "alignment": "WEST",
-    "radius": 800,
-    "strength": 10,
+    "offset": [ 0, 250, 0 ],
+    "radius": 600,
+    "strength": 12,
     "color": [
       77,
       13,
@@ -29131,6 +29202,187 @@
     ]
   },
   {
+    "description": "Drake Back Wound Right",
+    "height": 300,
+    "offset": [ 100, 0, -100 ],
+    "radius": 175,
+    "strength": 30,
+    "color": [
+      255,
+      0,
+      0
+    ],
+    "type": "FLICKER",
+    "duration": 10,
+    "range": 30,
+    "npcIds": [ 8612 ]
+  },
+  {
+  "description": "Drake Back Wound Left",
+  "height": 300,
+  "offset": [ -100, 0, -100 ],
+  "radius": 175,
+  "strength": 30,
+  "color": [
+    255,
+    0,
+    0
+  ],
+  "type": "FLICKER",
+  "duration": 10,
+  "range": 30,
+  "npcIds": [ 8612 ]
+  },
+  {
+    "description": "Drake Back Wound Front",
+    "height": 350,
+    "offset": [ 0, 0, 100 ],
+    "radius": 175,
+    "strength": 30,
+    "color": [
+      255,
+      0,
+      0
+    ],
+    "type": "FLICKER",
+    "duration": 10,
+    "range": 30,
+    "npcIds": [ 8612 ],
+    "animationIds": [ -1, 8276 ],
+    "fadeOutDuration": 300,
+    "fadeInDuration": 750
+  },
+  {
+    "description": "Drake Maw Idle",
+    "height": 50,
+    "offset": [ -20, 5, 252 ],
+    "radius": 32,
+    "strength": 120,
+    "color": "#ff8c00",
+    "type": "FLICKER",
+    "duration": 10,
+    "range": 5,
+    "npcIds": [ 8612 ],
+    "animationIds": [ -1 ],
+    "fadeInDuration": 300
+  },
+  {
+    "description": "Drake Ranged Attack",
+    "offset": [ 0, 0, 0 ],
+    "radius": 135,
+    "strength": 12,
+    "color": [
+      255,
+      0,
+      0
+    ],
+    "type": "FLICKER",
+    "duration": 1,
+    "range": 80,
+    "projectileIds": [ 1636 ],
+    "spawnDelay": 800,
+    "fadeInDuration": 300,
+    "fadeOutDuration": 100
+  },
+  {
+    "description": "Drake Flame Attack",
+    "offset": [ 0, 0, 0 ],
+    "radius": 175,
+    "strength": 12,
+    "color": "#ff8c00",
+    "type": "FLICKER",
+    "duration": 5,
+    "range": 60,
+    "projectileIds": [ 1637 ],
+    "spawnDelay": 255,
+    "fadeInDuration": 150,
+    "fadeOutDuration": 150
+  },
+  {
+    "description": "Drake Flame Explosion",
+    "offset": [ 0, 10, 0 ],
+    "radius": 150,
+    "strength": 45,
+    "color": "#ff8c00",
+    "type": "FLICKER",
+    "duration": 2,
+    "range": 80,
+    "graphicsObjectIds": [ 1638 ],
+    "fadeInDuration": 50,
+    "fadeOutDuration": 50
+  },
+  {
+    "description": "Wyrm Slithering Light",
+    "offset": [ 0, 0, 0 ],
+    "radius": 170,
+    "strength": 25,
+    "color": [
+      0,
+      200,
+      255
+    ],
+    "type": "FLICKER",
+    "duration": 10,
+    "range": 70,
+    "npcIds": [ 8610 ],
+    "fadeInDuration": 100,
+    "fadeOutDuration": 100
+  },
+  {
+    "description": "Shadow Wyrm Slithering Light",
+    "offset": [ 0, 0, 0 ],
+    "radius": 270,
+    "strength": 35,
+    "color": [
+      0,
+      50,
+      255
+    ],
+    "type": "FLICKER",
+    "duration": 10,
+    "range": 70,
+    "npcIds": [ 10398 ],
+    "fadeInDuration": 100,
+    "fadeOutDuration": 100
+  },
+
+  {
+    "description": "Wyrm Magic Attack",
+    "offset": [ 0, 0, 0 ],
+    "radius": 220,
+    "strength": 20,
+    "color": [
+      0,
+      200,
+      255
+    ],
+    "type": "FLICKER",
+    "duration": 1,
+    "range": 80,
+    "projectileIds": [ 1634 ],
+    "spawnDelay": 400,
+    "fadeInDuration": 300,
+    "fadeOutDuration": 100
+  },
+  {
+    "description": "Shadow Wyrm Magic Attack",
+    "offset": [ 0, 0, 0 ],
+    "radius": 220,
+    "strength": 50,
+    "color": [
+      0,
+      50,
+      255
+    ],
+    "type": "FLICKER",
+    "duration": 10,
+    "range": 70,
+    "projectileIds": [ 1814 ],
+    "spawnDelay": 400,
+    "fadeInDuration": 300,
+    "fadeOutDuration": 100
+  },
+  {
     "description": "KARUULM_INDOOR_LAVA_1",
     "worldX": 1307,
     "worldY": 10193,
@@ -32661,7 +32913,7 @@
     ]
   },
   {
-    "description": "TOA_WARDEN_P3_SKULL_CHARGE_PROJECTILE",
+    "description": "TOA_WARDEN_P3_SKULL_CHARGE_PROJECTILE & BLOOD_MOON_PROJECTILE",
     "height": 25,
     "radius": 400,
     "strength": 7,
@@ -32673,6 +32925,7 @@
     "type": "PULSE",
     "duration": 300,
     "range": 2,
+    "fadeOutDuration": 200,
     "projectileIds": [
       2226,
       2227
@@ -32879,9 +33132,9 @@
   {
     "description": "Secrets of the North - Candle",
     "height": 240,
-    "alignment": "CENTER",
+    "alignment": "LEFT",
     "radius": 350,
-    "strength": 15,
+    "strength": 12.5,
     "color": [
       9,
       149,
@@ -32931,11 +33184,10 @@
     ]
   },
   {
-    "description": "Secrets of the North - Scoreboard",
-    "height": 125,
-    "alignment": "RIGHT",
+    "description": "Secrets of the North - Scoreboard - Upper",
+    "offset": [ -35, 155, 0 ],
     "radius": 400,
-    "strength": 100,
+    "strength": 25,
     "color": [
       53,
       30,
@@ -32946,6 +33198,38 @@
     "range": 7,
     "objectIds": [
       46636
+    ]
+  },
+  {
+    "description": "Secrets of the North - Scoreboard - Lower",
+    "offset": [ -35, 55, 0 ],
+    "radius": 400,
+    "strength": 25,
+    "color": [
+      53,
+      30,
+      121
+    ],
+    "type": "PULSE",
+    "duration": 1800,
+    "range": 7,
+    "objectIds": [
+      46636
+    ]
+  },
+  {
+    "description": "Secrets of the North - Ancient Essence Crystals",
+    "offset": [ -75, 105, -10 ],
+    "radius": 205,
+    "strength": 10,
+    "color": [
+      155,
+      30,
+      155
+    ],
+    "type": "STATIC",
+    "objectIds": [
+      46701
     ]
   },
   {
@@ -32964,6 +33248,23 @@
       2327
     ],
     "fadeInDuration": 300
+  },
+  {
+    "description": "Duke eye scanning",
+    "radius": 500,
+    "strength": 50,
+    "color": [ 255, 50, 50 ],
+    "offset": [ 0, 0, 231 ],
+    "fixedDespawnTime": true,
+    "spawnDelay": 1800,
+    "despawnDelay": 600,
+    "fadeInDuration": 100,
+    "fadeOutDuration": 100,
+    "npcIds": [
+      12199,
+      12200,
+      12201
+    ]
   },
   {
     "description": "STANDING_TORCH",
@@ -33003,8 +33304,7 @@
   },
   {
     "description": "PENGUIN_BASE_LAMP",
-    "height": 120,
-    "alignment": "FRONT",
+    "height": 140,
     "radius": 140,
     "strength": 10.5,
     "color": [
@@ -33600,7 +33900,7 @@
     ]
   },
   {
-    "description": "MAGE_TRAIN_ARENA_CANDLEBRA",
+    "description": "MAGE_TRAIN_ARENA_CANDLEABRA",
     "height": 210,
     "alignment": "CENTER",
     "radius": 500,
@@ -34171,6 +34471,57 @@
     "range": 23,
     "objectIds": [
       10185
+    ]
+  },
+  {
+    "description": "Lighthouse - Light at the top - Wide",
+    "height": 355,
+    "radius": 1400,
+    "visibleFromOtherPlanes": false,
+    "fadeInDuration": 1,
+    "strength": 15,
+    "color": [
+      255,
+      255,
+      170
+    ],
+    "type": "STATIC",
+    "objectIds": [
+      4587
+    ]
+  },
+  {
+    "description": "Lighthouse - Light at the top - Narrow",
+    "height": 215,
+    "radius": 500,
+    "visibleFromOtherPlanes": true,
+    "strength": 75,
+    "color": [
+      255,
+      255,
+      170
+    ],
+    "type": "STATIC",
+    "objectIds": [
+      4587
+    ]
+  },
+  {
+    "description": "Wall Lantern",
+    "height": 235,
+    "alignment": "CENTER",
+    "radius": 250,
+    "strength": 6.5,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      3474
     ]
   },
   {
@@ -35167,6 +35518,36 @@
     ]
   },
   {
+    "description": "Eclipse Moon Entrance",
+    "worldX": 1510,
+    "worldY": 9673,
+    "plane": 1,
+    "radius": 750,
+    "strength": 15,
+    "color": "#ff8000",
+    "offset": [ 70, 250, 0 ]
+  },
+  {
+    "description": "Blue Moon Entrance",
+    "worldX": 1405,
+    "worldY": 9704,
+    "plane": 0,
+    "radius": 1200,
+    "strength": 15,
+    "color": "#0097ff",
+    "offset": [ 100, 350, 0 ]
+  },
+  {
+    "description": "Blood Moon Entrance",
+    "worldX": 1388,
+    "worldY": 9591,
+    "plane": 0,
+    "radius": 1600,
+    "strength": 15,
+    "color": "#de0000",
+    "offset": [ 0, 350, 70 ]
+  },
+  {
     "description": "ANTECHAMBER_CEILING_LIGHT",
     "worldX": 1440,
     "worldY": 9632,
@@ -35192,7 +35573,7 @@
     "color": "#e58500",
     "strength": 20,
     "radius": 1000,
-    "offset": [ 0, 227, 0 ]
+    "offset": [ 0, 287, 0 ]
   },
   {
     "description": "ANTECHAMBER_BLOOD_MOON_BRAZIERS",
@@ -35200,7 +35581,7 @@
     "color": "#df002e",
     "strength": 10,
     "radius": 1000,
-    "offset": [ 0, 227, 0 ]
+    "offset": [ 0, 287, 0 ]
   },
   {
     "description": "ANTECHAMBER_BLUE_MOON_BRAZIERS",
@@ -35208,15 +35589,31 @@
     "color": "#3571a7",
     "strength": 25,
     "radius": 1000,
-    "offset": [ 0, 227, 0 ]
+    "offset": [ 0, 287, 0 ]
+  },
+  {
+    "description": "Earthbound Cavern - Glowing Mushrooms",
+    "objectIds": [ 36220 ],
+    "height": 155,
+    "color": "#00e4ff",
+    "strength": 5.5,
+    "radius": 600
   },
   {
     "description": "ANTECHAMBER_ECLIPSE_MOON_BRAZIERS",
     "objectIds": [ 51345 ],
     "color": "#ffa41b",
-    "strength": 2,
+    "strength": 3.5,
     "radius": 1000,
-    "offset": [ 0, 227, 0 ]
+    "offset": [ 0, 257, 0 ]
+  },
+  {
+    "description": "ANTECHAMBER_ECLIPSE_MOON_BRAZIERS",
+    "objectIds": [ 51345 ],
+    "color": "#ffa41b",
+    "strength": 250,
+    "radius": 100,
+    "offset": [ 15, 287, -15 ]
   },
   {
     "description": "SULPHUR_NAGA",
@@ -35262,7 +35659,7 @@
   },
   {
     "description": "EYATLALLI",
-    "npcIds": [ 12869 ],
+    "npcIds": [ 12869, 12870 ],
     "color": "#00c7c1",
     "strength": 25,
     "radius": 700,
@@ -35270,7 +35667,7 @@
   },
   {
     "description": "EYATLALLI_RIGHT_HAND",
-    "npcIds": [ 12869 ],
+    "npcIds": [ 12869, 12870 ],
     "color": "#00c7c1",
     "strength": 25,
     "radius": 250,
@@ -35278,7 +35675,7 @@
   },
   {
     "description": "EYATLALLI_LEFT_HAND",
-    "npcIds": [ 12869 ],
+    "npcIds": [ 12869, 12870 ],
     "color": "#00c7c1",
     "strength": 15,
     "radius": 250,
@@ -35320,6 +35717,36 @@
     "offset": [ 0, 47, 0 ],
     "fadeInDuration": 300,
     "spawnDelay": 600
+  },
+  {
+    "description": "BLUE_MOON_ARENA_BURNING_BRAZIERS",
+    "objectIds": [ 51052 ],
+    "color": "#3571a7",
+    "strength": 25,
+    "radius": 1000,
+    "offset": [ 0, 300, -60 ],
+    "fadeInDuration": 200,
+    "fadeOutDuration": 200
+  },
+  {
+    "description": "BLUE_MOON_ARENA_BURNING_LINE",
+    "objectIds": [ 51053 ],
+    "color": "#3571a7",
+    "strength": 25,
+    "radius": 220,
+    "offset": [ -30, 100, 0 ],
+    "fadeInDuration": 200,
+    "fadeOutDuration": 200
+  },
+  {
+    "description": "BLOOD_MOON_ARENA_BURNING_LINE",
+    "objectIds": [ 51054 ],
+    "color": "#6f2375",
+    "strength": 15,
+    "radius": 250,
+    "offset": [ -30, 100, 0 ],
+    "fadeInDuration": 200,
+    "fadeOutDuration": 200
   },
   {
     "description": "CURRENT_MOON_PHASE",
@@ -35420,7 +35847,8 @@
     "duration": 1000,
     "range": 12,
     "objectIds": [
-      42819
+      42819,
+      42820
     ]
   },
   {
@@ -35463,5 +35891,450 @@
     "objectIds": [
       2501
     ]
+  },
+  {
+    "description": "Royal Trouble - Powered Engine",
+    "height": 0,
+    "offset": [ 70, 70, 0 ],
+    "radius": 300,
+    "strength": 12.5,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      15229
+    ]
+  },
+  {
+    "description": "Troll Stronghold Window and Exit Door",
+    "objectIds": [ 3770, 3774 ],
+    "radius": 450,
+    "areas": [ "TROLL_STRONGHOLD" ],
+    "strength": 10,
+    "color": "#ffffff",
+    "offset": [ 0, 150, 60 ]
+  },
+  {
+    "description": "Icy Basalt Teleport",
+    "graphicsObjectIds": [ 1628 ],
+    "radius": 250,
+    "strength": 10,
+    "color": [ 0, 255, 255 ],
+    "offset": [ 0, 30, 0 ],
+    "fadeOutDuration": 150,
+    "fadeInDuration": 250,
+    "spawnDelay": 600
+  },
+  {
+    "description": "Stony Basalt Teleport",
+    "graphicsObjectIds": [ 1617 ],
+    "radius": 250,
+    "strength": 10,
+    "color": [ 0, 255, 50 ],
+    "offset": [ 0, 30, 0 ],
+    "fadeOutDuration": 150,
+    "fadeInDuration": 250,
+    "spawnDelay": 600
+  },
+  {
+    "description": "Standard Spellbook Teleport",
+    "graphicsObjectIds": [ 111 ],
+    "radius": 350,
+    "strength": 12,
+    "color": [ 205, 0, 205 ],
+    "offset": [ 0, 130, 0 ],
+    "fixedDespawnTime": true,
+    "despawnDelay": 400,
+    "fadeInDuration": 100,
+    "fadeOverlap": true,
+    "fadeOutDuration": 450,
+    "spawnDelay": 950
+  },
+  {
+    "description": "Wilderness Mage Arena Bank Pool 1",
+    "worldX": 2542,
+    "worldY": 4720,
+    "plane": 0,
+    "height": 60,
+    "alignment": "CENTER",
+    "radius": 380,
+    "strength": 6,
+    "color": [
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "description": "Wilderness Mage Arena Bank Pool 2",
+    "worldX": 2509,
+    "worldY": 4687,
+    "plane": 0,
+    "height": 60,
+    "alignment": "CENTER",
+    "radius": 380,
+    "strength": 6,
+    "color": [
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "description": "Wilderness - Teleport Obelisks",
+    "height": 330,
+    "alignment": "CENTER",
+    "radius": 350,
+    "strength": 25,
+    "color": [
+      120,
+      24,
+      137
+    ],
+    "type": "FLICKER",
+    "duration": 10,
+    "range": 20,
+    "objectIds": [ 14825 ],
+    "animationIds": [ 3944 ],
+    "fadeInDuration": 80,
+    "fadeOutDuration": 80
+  },
+  {
+    "description": "Rag and Bone Man - Pot Boiler",
+    "height": 30,
+    "alignment": "CENTER",
+    "radius": 250,
+    "strength": 17.5,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [ 14008 ],
+    "fadeInDuration": 50,
+    "fadeOutDuration": 100
+  },
+  {
+    "description": "the Jormungand - Magic Projectile",
+    "height": -20,
+    "alignment": "CENTER",
+    "radius": 200,
+    "strength": 25,
+    "color": [
+      252,
+      0,
+      0
+    ],
+    "type": "FLICKER",
+    "duration": 3,
+    "range": 35,
+    "projectileIds": [ 1737 ],
+    "fadeInDuration": 900,
+    "fadeOutDuration": 300
+  },
+  {
+    "description": "Venenatis, Spindel, Artio, Callisto and Escape Caves exit cave",
+    "objectIds": [
+      46999,
+      47000,
+      47122,
+      47147
+    ],
+    "radius": 500,
+    "strength": 10,
+    "color": "#ffffff",
+    "offset": [ 40, 40, 0 ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Exit Door",
+    "objectIds": [
+      46925
+    ],
+    "radius": 450,
+    "strength": 10,
+    "color": "#ffffff",
+    "offset": [ 40, 150, 0 ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Ceiling Light",
+    "objectIds": [
+      46949
+    ],
+    "radius": 1350,
+    "strength": 10,
+    "color": "#ffffff",
+    "offset": [ 40, 1000, 0 ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Outside Candle Centre",
+    "offset": [ 0, 30, 0 ],
+    "radius": 300,
+    "strength": 10,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      46993
+    ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Outside Candle Offset",
+    "offset": [ 0, 30, 40 ],
+    "radius": 300,
+    "strength": 10,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      46994
+    ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Altar Candle 1",
+    "offset": [ -260, 130, 120 ],
+    "radius": 300,
+    "strength": 7,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      43108,
+      46910,
+      46911
+    ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Altar Candle 2",
+    "offset": [ -195, 125, -170 ],
+    "radius": 300,
+    "strength": 7,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      43108,
+      46910,
+      46911
+    ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Altar Candle 3",
+    "offset": [ 270, 120, 140 ],
+    "radius": 300,
+    "strength": 7,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      43108,
+      46910,
+      46911
+    ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Altar Candle 4",
+    "offset": [ 260, 120, -185 ],
+    "radius": 250,
+    "strength": 4,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      43108,
+      46910,
+      46911
+    ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Altar Candle 5",
+    "offset": [ 60, 110, -185 ],
+    "radius": 200,
+    "strength": 4,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20,
+    "objectIds": [
+      43108,
+      46910,
+      46911
+    ]
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Altar Glow Purple",
+    "offset": [ 130, 155, -190 ],
+    "radius": 85,
+    "strength": 55,
+    "color": [
+      77,
+      13,
+      255
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 10,
+    "objectIds": [
+      43108
+    ],
+    "fadeOutDuration": 50,
+    "fadeInDuration": 50
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Altar Glow Orange",
+    "offset": [ 130, 155, -190 ],
+    "radius": 175,
+    "strength": 25,
+    "color": [
+      255,
+      162,
+      41
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 10,
+    "objectIds": [
+      46910
+    ],
+    "fadeOutDuration": 50,
+    "fadeInDuration": 50
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Summon Hound Purple",
+    "offset": [ 0, 150, 0 ],
+    "radius": 450,
+    "strength": 15,
+    "color": [
+      77,
+      13,
+      255
+    ],
+    "type": "STATIC",
+    "duration": 0,
+    "range": 10,
+    "npcIds": [ 6611, 11993 ],
+    "animationIds": [ 9975 ],
+    "fadeOutDuration": 250,
+    "fadeInDuration": 500
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Enrage",
+    "offset": [ 0, 150, 0 ],
+    "radius": 400,
+    "strength": 8,
+    "color": [
+      255,
+      162,
+      41
+    ],
+    "type": "STATIC",
+    "duration": 0,
+    "range": 10,
+    "npcIds": [ 11994 ],
+    "animationIds": [ -1, 9969, 9972, 9974, 9976 ],
+    "fadeOutDuration": 1500
+  },
+  {
+    "description": "Vet'ion/Calvar'ion Enrage Hound",
+    "offset": [ 0, 60, 0 ],
+    "radius": 300,
+    "strength": 7,
+    "color": [
+      255,
+      162,
+      41
+    ],
+    "type": "STATIC",
+    "duration": 0,
+    "range": 10,
+    "npcIds": [ 12108 ],
+    "animationIds": [ -1, 6578, 6579 ],
+    "fadeInDuration": 100,
+    "fadeOutDuration": 1500
+  },
+  {
+    "description": "Wilderness - Escape Caves - Rope Light",
+    "objectIds": [
+      47150
+    ],
+    "radius": 550,
+    "strength": 15,
+    "color": "#ffffff",
+    "offset": [ 0, 200, -70 ]
+  },
+  {
+    "description": "Tutorial Island - The Node - Furnace - 1",
+    "objectIds": [
+      42824
+    ],
+    "offset": [ 0, 80, -30 ],
+    "radius": 150,
+    "strength": 18,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20
+  },
+  {
+    "description": "Tutorial Island - The Node - Furnace - 2",
+    "objectIds": [
+      42824
+    ],
+    "offset": [ 0, 80, -90 ],
+    "radius": 250,
+    "strength": 10,
+    "color": [
+      252,
+      148,
+      3
+    ],
+    "type": "FLICKER",
+    "duration": 0,
+    "range": 20
   }
 ]
