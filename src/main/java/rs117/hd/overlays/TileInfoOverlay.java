@@ -150,8 +150,8 @@ public class TileInfoOverlay extends Overlay implements MouseListener, MouseWhee
 			tileLoop:
 			for (int z = maxPlane; z >= minPlane; z--) {
 				for (int isBridge = 1; isBridge >= 0; isBridge--) {
-					for (int x = 0; x < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE; x++) {
-						for (int y = 0; y < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE; y++) {
+					for (int x = 0; x < EXTENDED_SCENE_SIZE; x++) {
+						for (int y = 0; y < EXTENDED_SCENE_SIZE; y++) {
 							Tile tile = tiles[z][x][y];
 							boolean shouldDraw = tile != null && (isBridge == 0 || tile.getBridge() != null);
 							if (shouldDraw && drawTileInfo(g, sceneContext, tile)) {
@@ -550,7 +550,7 @@ public class TileInfoOverlay extends Overlay implements MouseListener, MouseWhee
 		int tileExX = lp.getSceneX() + SCENE_OFFSET;
 		int tileExY = lp.getSceneY() + SCENE_OFFSET;
 		int plane = tile.getRenderLevel();
-		if (tileExX < 0 || tileExY < 0 || tileExX >= HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE || tileExY >= HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE) {
+		if (tileExX < 0 || tileExY < 0 || tileExX >= EXTENDED_SCENE_SIZE || tileExY >= EXTENDED_SCENE_SIZE) {
 			return null;
 		}
 
@@ -586,7 +586,7 @@ public class TileInfoOverlay extends Overlay implements MouseListener, MouseWhee
 	private static int getHeight(Scene scene, int localX, int localY, int plane) {
 		int sceneX = (localX >> LOCAL_COORD_BITS) + SCENE_OFFSET;
 		int sceneY = (localY >> LOCAL_COORD_BITS) + SCENE_OFFSET;
-		if (sceneX < 0 || sceneY < 0 || sceneX >= HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE || sceneY >= HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE)
+		if (sceneX < 0 || sceneY < 0 || sceneX >= EXTENDED_SCENE_SIZE || sceneY >= EXTENDED_SCENE_SIZE)
 			return 0;
 
 		int[][][] tileHeights = scene.getTileHeights();
@@ -642,8 +642,8 @@ public class TileInfoOverlay extends Overlay implements MouseListener, MouseWhee
 		Tile[][][] tiles = ctx.scene.getExtendedTiles();
 		int plane = ctrlHeld ? MAX_Z - 1 : client.getPlane();
 		for (int z = plane; z >= 0; z--) {
-			for (int x = 0; x < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE; x++) {
-				for (int y = 0; y < HdPlugin.CUSTOM_EXTENDED_SCENE_SIZE; y++) {
+			for (int x = 0; x < EXTENDED_SCENE_SIZE; x++) {
+				for (int y = 0; y < EXTENDED_SCENE_SIZE; y++) {
 					Tile tile = tiles[z][x][y];
 					if (tile == null)
 						continue;
