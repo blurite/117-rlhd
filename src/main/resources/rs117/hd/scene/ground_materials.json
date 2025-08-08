@@ -47,6 +47,24 @@
     ]
   },
   {
+    "name": "VERTICAL_GRAVEL",
+    "materials": [
+      "VERTICAL_GRAVEL"
+    ]
+  },
+  {
+    "name": "DIRTY_SNOW",
+    "materials": [
+      "SNOW_1",
+      "SNOW_3",
+      "GRAVEL_LIGHT",
+      "SNOW_4",
+      "DIRT_1",
+      "GRAVEL_LIGHT",
+      "SNOW_2"
+    ]
+  },
+  {
     "name": "SNOW_1",
     "materials": [
       "SNOW_1",
@@ -74,6 +92,12 @@
     "name": "FALADOR_PATHS",
     "materials": [
       "FALADOR_PATH_BRICK"
+    ]
+  },
+  {
+    "name": "BRICK_PATHS",
+    "materials": [
+      "BRICK_PATH"
     ]
   },
   {
@@ -387,6 +411,15 @@
     ]
   },
   {
+    "name": "INTERIOR_DIRT_FLOOR",
+    "materials": [
+      "GRUNGE_1",
+      "DIRT_1",
+      "DIRT_2",
+      "DIRT_1"
+    ]
+  },
+  {
     "name": "STONE_CAVE_FLOOR",
     "materials": [
       "STONE",
@@ -401,6 +434,23 @@
       "STONE_NORMALED",
       "ROCK_2",
       "STONE_NORMALED"
+    ]
+  },
+  {
+    "name": "SANDY_DIRT",
+    "materials": [
+      "SAND_3",
+      "DIRT_1",
+      "SAND_2"
+    ]
+  },
+  {
+    "name": "SANDY_DIRT_2",
+    "materials": [
+      "DIRT_1",
+      "GRAVEL",
+      "SAND_1",
+      "DIRT_2"
     ]
   },
   {
@@ -461,6 +511,30 @@
       "ABYSSAL_2",
       "ABYSSAL",
       "ABYSSAL"
+    ]
+  },
+  {
+    "name": "GROUND_WEBS",
+    "materials": [
+      "GROUND_WEB_1",
+      "GROUND_WEB_2",
+      "GROUND_WEB_3"
+    ]
+  },
+  {
+    "name": "ABYSSAL_BILE",
+    "materials": [
+      "ABYSSAL_2_FLOW",
+      "ABYSSAL_FLOW"
+    ]
+  },
+  {
+    "name": "TERRACOTTA_FLOOR",
+    "materials": [
+      "GRUNGE_1_LIGHT_SHINY",
+      "GRUNGE_2_SHINY",
+      "GRUNGE_1_LIGHT_SHINY",
+      "GRUNGE_2_SHINY"
     ]
   }
 ]

@@ -24,16 +24,16 @@
  */
 package rs117.hd.utils;
 
-import java.util.HashSet;
 import java.util.Random;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import rs117.hd.data.ObjectType;
 import rs117.hd.scene.areas.AABB;
 import rs117.hd.scene.areas.Area;
 
-import static net.runelite.api.Constants.SCENE_SIZE;
 import static net.runelite.api.Constants.*;
+import static net.runelite.api.Constants.SCENE_SIZE;
 import static net.runelite.api.Perspective.*;
 import static rs117.hd.scene.ProceduralGenerator.VERTICES_PER_FACE;
 import static rs117.hd.scene.ProceduralGenerator.faceLocalVertices;
@@ -153,11 +153,23 @@ public class HDUtils {
 		return ((x % modulus) + modulus) % modulus;
 	}
 
+	public static float sign(float value) {
+		return value < 0 ? -1 : 1;
+	}
+
+	public static int sign(int value) {
+		return value < 0 ? -1 : 1;
+	}
+
 	public static float clamp(float value, float min, float max) {
 		return Math.min(Math.max(value, min), max);
 	}
 
 	public static int clamp(int value, int min, int max) {
+		return Math.min(Math.max(value, min), max);
+	}
+
+	public static long clamp(long value, long min, long max) {
 		return Math.min(Math.max(value, min), max);
 	}
 
@@ -196,112 +208,95 @@ public class HDUtils {
 		return new float[] { (float) Math.toRadians(altitude), (float) Math.toRadians(azimuth) };
 	}
 
+	public static float[] ensureArrayLength(float[] array, int targetLength) {
+		if (array.length == targetLength)
+			return array;
+		float[] corrected = new float[targetLength];
+		System.arraycopy(array, 0, corrected, 0, Math.min(array.length, corrected.length));
+		return corrected;
+	}
+
 	public static int convertWallObjectOrientation(int orientation) {
 		// Note: this is still imperfect, since the model rotation of a wall object depends on more than just the config orientation,
 		// 		 i.e. extra rotation depending on wall type whatever. I'm not sure.
 		// Derived from config orientation {@link HDUtils#getBakedOrientation}
 		switch (orientation) {
-			case 1: // east (config orientation = 0)
-				return 512;
-			case 2: // south (config orientation = 1)
-				return 1024;
-			case 4: // west (config orientation = 2)
-				return 1536;
-			case 8: // north (config orientation = 3)
+			case 1:
+				return 512; // west
+			case 2:
+				return 1024; // north
+			case 4:
+				return 1536; // east
+			case 8:
 			default:
-				return 0;
-			case 16: // south-east (config orientation = 0)
-				return 768;
-			case 32: // south-west (config orientation = 1)
-				return 1280;
-			case 64: // north-west (config orientation = 2)
-				return 1792;
-			case 128: // north-east (config orientation = 3)
-				return 256;
+				return 0; // south
+			case 16:
+				return 768; // north-west
+			case 32:
+				return 1280; // north-east
+			case 64:
+				return 1792; // south-east
+			case 128:
+				return 256; // south-west
 		}
 	}
 
 	// (gameObject.getConfig() >> 6) & 3, // 2-bit orientation
 	// (gameObject.getConfig() >> 8) & 1, // 1-bit interactType != 0 (supports items)
-	// (gameObject.getConfig() & 0x3F), // 6-bit object type? (10 seems to mean movement blocker)
 	// (gameObject.getConfig() >> 9) // should always be zero
 	public static int getBakedOrientation(int config) {
-		switch (config >> 6 & 3) {
-			case 0: // Rotated 180 degrees
-				return 1024;
-			case 1: // Rotated 90 degrees counter-clockwise
-				return 1536;
-			case 2: // Not rotated
-			default:
-				return 0;
-			case 3: // Rotated 90 degrees clockwise
-				return 512;
+		var objectType = ObjectType.fromConfig(config);
+		int orientation = 1024 + 512 * (config >>> 6 & 3);
+		switch (objectType) {
+			case WallDecorDiagonalNoOffset:
+				orientation += 1024;
+			case WallDiagonalCorner:
+			case WallSquareCorner:
+			case WallDecorDiagonalOffset:
+			case WallDecorDiagonalBoth:
+				orientation -= 256;
+				break;
 		}
+		return orientation % 2048;
 	}
 
-	public static String getObjectType(int config) {
-		int type = config & 0x3F;
-		final String[] OBJECT_TYPES = {
-			"StraightWalls",
-			"DiagWallsConn",
-			"EntireWallsCorners",
-			"StraightWallsConn",
-			"StraightInDeco",
-			"StraightOutDeco",
-			"DiagOutDeco",
-			"DiagInDeco",
-			"DiagInWallDeco",
-			"DiagWalls",
-			"Objects",
-			"GroundObjects",
-			"StraightSlopeRoofs",
-			"DiagSlopeRoofs",
-			"DiagSlopeConnRoofs",
-			"StraightSlopeConnRoofs",
-			"StraightSlopeCorners",
-			"FlatTopRoofs",
-			"BottomEdgeRoofs",
-			"DiagBottomEdgeConn",
-			"StraightBottomEdgeConn",
-			"StraightBottomEdgeConnCorners",
-			"GroundDecoMapSigns"
-		};
-		String name = "Unknown";
-		if (type < OBJECT_TYPES.length)
-			name = OBJECT_TYPES[type];
-		return String.format("(%d) %s", type, name);
-	}
+	public static AABB getSceneBounds(Scene scene) {
+		if (!scene.isInstance()) {
+			int x = scene.getBaseX() - SCENE_OFFSET;
+			int y = scene.getBaseY() - SCENE_OFFSET;
+			return new AABB(x, y, x + EXTENDED_SCENE_SIZE, y + EXTENDED_SCENE_SIZE);
+		}
 
-	public static HashSet<Integer> getSceneRegionIds(Scene scene) {
-		HashSet<Integer> regionIds = new HashSet<>();
+		// Assume instances are assembled from approximately adjacent chunks on the map
+		int minX = Integer.MAX_VALUE;
+		int minY = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE;
+		int maxY = Integer.MIN_VALUE;
 
-		if (scene.isInstance()) {
-			// If the center chunk is invalid, pick any valid chunk and hope for the best
-			int[][][] chunks = scene.getInstanceTemplateChunks();
-			for (int[][] plane : chunks) {
-				for (int[] column : plane) {
-					for (int chunk : column) {
-						if (chunk == -1)
-							continue;
+		int[][][] chunks = scene.getInstanceTemplateChunks();
+		for (int[][] plane : chunks) {
+			for (int[] column : plane) {
+				for (int chunk : column) {
+					if (chunk == -1)
+						continue;
 
-						// Extract chunk coordinates
-						int x = chunk >> 14 & 0x3FF;
-						int y = chunk >> 3 & 0x7FF;
-						regionIds.add((x >> 3) << 8 | y >> 3);
-					}
+					// Extract chunk coordinates
+					int x = chunk >> 14 & 0x3FF;
+					int y = chunk >> 3 & 0x7FF;
+					minX = Math.min(minX, x);
+					minY = Math.min(minY, y);
+					maxX = Math.max(maxX, x + 1);
+					maxY = Math.max(maxY, y + 1);
 				}
 			}
 		}
-		else
-		{
-			int baseX = scene.getBaseX();
-			int baseY = scene.getBaseY();
-			for (int x = 0; x < SCENE_SIZE; x += REGION_SIZE)
-				for (int y = 0; y < SCENE_SIZE; y += REGION_SIZE)
-					regionIds.add((baseX + x >> 6) << 8 | baseY + y >> 6);
-		}
 
-		return regionIds;
+		// Return an AABB representing no match, if there are no chunks
+		if (maxX < minX || maxY < minY)
+			return new AABB(-1, -1);
+
+		// Transform from chunk to world coordinates
+		return new AABB(minX << 3, minY << 3, maxX << 3, maxY << 3);
 	}
 
 	/**

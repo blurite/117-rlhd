@@ -133,6 +133,13 @@ public class ColorUtils {
 		return (float) (x - Math.floor(x / modulus) * modulus);
 	}
 
+	/**
+	 * Return the fractional part as a positive number.
+	 */
+	public static float fract(float x) {
+		return (float) (x - Math.floor(x));
+	}
+
 	private static float clamp(float value, float min, float max) {
 		return Math.min(Math.max(value, min), max);
 	}
@@ -180,7 +187,7 @@ public class ColorUtils {
 	 */
 	public static float[] hslToSrgb(float[] hsl) {
 		float C = hsl[1] * (1 - Math.abs(2 * hsl[2] - 1));
-		float H_prime = hsl[0] * 6;
+		float H_prime = fract(hsl[0]) * 6;
 		float m = hsl[2] - C / 2;
 
 		float r = clamp(Math.abs(H_prime - 3) - 1, 0, 1) * C + m;
@@ -303,6 +310,10 @@ public class ColorUtils {
 			(srgb >> 8 & 0xFF) / (float) 0xFF,
 			(srgb & 0xFF) / (float) 0xFF,
 		};
+	}
+
+	public static float[] srgb(Color c) {
+		return srgb(c.getRed(), c.getGreen(), c.getBlue());
 	}
 
 	/**

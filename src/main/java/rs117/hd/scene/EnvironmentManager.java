@@ -26,6 +26,7 @@ package rs117.hd.scene;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -36,7 +37,6 @@ import net.runelite.client.callback.ClientThread;
 import rs117.hd.HdPlugin;
 import rs117.hd.HdPluginConfig;
 import rs117.hd.config.DefaultSkyColor;
-import rs117.hd.scene.areas.AABB;
 import rs117.hd.scene.environments.Environment;
 import rs117.hd.utils.FileWatcher;
 import rs117.hd.utils.Props;
@@ -54,10 +54,8 @@ import static rs117.hd.utils.ResourcePath.path;
 @Slf4j
 @Singleton
 public class EnvironmentManager {
-	private static final ResourcePath ENVIRONMENTS_PATH = Props.getPathOrDefault(
-		"rlhd.environments-path",
-		() -> path(EnvironmentManager.class, "environments.json")
-	);
+	private static final ResourcePath ENVIRONMENTS_PATH = Props
+		.getFile("rlhd.environments-path", () -> path(EnvironmentManager.class, "environments.json"));
 
 	@Inject
 	private Client client;
@@ -140,6 +138,22 @@ public class EnvironmentManager {
 	private final float[] startSunAngles = { 0, 0 };
 	public final float[] currentSunAngles = { 0, 0 };
 	private final float[] targetSunAngles = { 0, 0 };
+
+	private float startWindAngle = 0f;
+	public float currentWindAngle = 0f;
+	private float targetWindAngle = 0f;
+
+	private float startWindSpeed = 0f;
+	public float currentWindSpeed = 0f;
+	private float targetWindSpeed = 0f;
+
+	private float startWindStrength = 0f;
+	public float currentWindStrength = 0f;
+	private float targetWindStrength = 0f;
+
+	private float startWindCeiling = 0f;
+	public float currentWindCeiling = 0f;
+	private float targetWindCeiling = 0f;
 
 	private boolean lightningEnabled = false;
 	private boolean forceNextTransition = false;
@@ -259,6 +273,10 @@ public class EnvironmentManager {
 				currentSunAngles[i] = hermite(startSunAngles[i], targetSunAngles[i], t);
 			currentUnderwaterCausticsColor = hermite(startUnderwaterCausticsColor, targetUnderwaterCausticsColor, t);
 			currentUnderwaterCausticsStrength = hermite(startUnderwaterCausticsStrength, targetUnderwaterCausticsStrength, t);
+			currentWindAngle = hermite(startWindAngle, targetWindAngle, t);
+			currentWindSpeed = hermite(startWindSpeed, targetWindSpeed, t);
+			currentWindStrength = hermite(startWindStrength, targetWindStrength, t);
+			currentWindCeiling = hermite(startWindCeiling, targetWindCeiling, t);
 		}
 
 		updateLightning();
@@ -306,6 +324,10 @@ public class EnvironmentManager {
 		startGroundFogOpacity = currentGroundFogOpacity;
 		startUnderwaterCausticsColor = currentUnderwaterCausticsColor;
 		startUnderwaterCausticsStrength = currentUnderwaterCausticsStrength;
+		startWindAngle = currentWindAngle;
+		startWindSpeed = currentWindSpeed;
+		startWindStrength = currentWindStrength;
+		startWindCeiling = currentWindCeiling;
 		for (int i = 0; i < 2; i++)
 			startSunAngles[i] = mod(currentSunAngles[i], TWO_PI);
 
@@ -321,7 +343,7 @@ public class EnvironmentManager {
 		var overworldEnv = getOverworldEnvironment();
 		float[] sunAngles = env.sunAngles;
 		if (sunAngles == null)
-			sunAngles = overworldEnv.sunAngles;
+			sunAngles = Objects.requireNonNullElse(overworldEnv.sunAngles, Environment.DEFAULT_SUN_ANGLES);
 		System.arraycopy(sunAngles, 0, targetSunAngles, 0, 2);
 
 		if (!config.atmosphericLighting() && !env.force)
@@ -334,6 +356,10 @@ public class EnvironmentManager {
 		targetUnderglowColor = env.underglowColor;
 		targetUnderwaterCausticsColor = env.waterCausticsColor;
 		targetUnderwaterCausticsStrength = env.waterCausticsStrength;
+		targetWindAngle = env.windAngle;
+		targetWindSpeed = env.windSpeed;
+		targetWindStrength = env.windStrength;
+		targetWindCeiling = env.windCeiling;
 
 		// Prevent transitions from taking the long way around
 		for (int i = 0; i < 2; i++) {
@@ -369,15 +395,11 @@ public class EnvironmentManager {
 	 * adds them to lists for easy access.
 	 */
 	public void loadSceneEnvironments(SceneContext sceneContext) {
-		log.debug("Adding environments for scene with regions: {}", sceneContext.regionIds);
-
-		AABB[] regions = sceneContext.regionIds.stream()
-			.map(AABB::new)
-			.toArray(AABB[]::new);
+		log.debug("Loading environments for scene: {}", sceneContext.sceneBounds);
 
 		sceneContext.environments.clear();
 		for (var environment : environments) {
-			if (environment.area.intersects(regions)) {
+			if (sceneContext.sceneBounds.intersects(environment.area.aabbs)) {
 				log.debug("Added environment: {}", environment);
 				sceneContext.environments.add(environment);
 			}

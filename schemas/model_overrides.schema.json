@@ -30,30 +30,30 @@
       },
       "npcIds": {
         "type": "array",
-        "description": "A set of NPC IDs which the override should apply to.",
+        "description": "A set of NPC gameval names which the override should apply to.",
         "items": {
-          "type": "integer"
+          "type": "string"
         }
       },
       "objectIds": {
         "type": "array",
-        "description": "A set of object IDs which the override should apply to.",
+        "description": "A set of object gameval names which the override should apply to.",
         "items": {
-          "type": "integer"
+          "type": "string"
         }
       },
       "projectileIds": {
         "type": "array",
-        "description": "A set of projectile IDs which the override should apply to.",
+        "description": "A set of projectile gameval names which the override should apply to.",
         "items": {
-          "type": "integer"
+          "type": "string"
         }
       },
       "graphicsObjectIds": {
         "type": "array",
-        "description": "A set of graphics object IDs which the override should apply to.",
+        "description": "A set of graphics object gameval names which the override should apply to.",
         "items": {
-          "type": "integer"
+          "type": "string"
         }
       },
       "baseMaterial": {
@@ -149,6 +149,10 @@
         "type": "boolean",
         "description": "Whether the model receive shadows cast by other objects. Defaults to true."
       },
+      "terrainVertexSnap": {
+        "type": "boolean",
+        "description": "Whether the bottom-most vertices of the model should snap to the tile height. Defaults to false."
+      },
       "shadowOpacityThreshold": {
         "type": "number",
         "description": "Specify an opacity threshold for shadow casting that better suits the model. Between 0 and 1."
@@ -169,6 +173,25 @@
         "items": {
           "$ref": "aabb.schema.json"
         }
+      },
+      "windDisplacementMode": {
+        "type": "string",
+        "description": "What type of wind displacement should be applied to the model. Defaults to DISABLED.",
+        "enum": [
+          "DISABLED",
+          "OBJECT",
+          "VERTEX",
+          "VERTEX_WITH_HEMISPHERE_BLEND",
+          "VERTEX_JIGGLE"
+        ]
+      },
+      "windDisplacementModifier": {
+        "type": "integer",
+        "description": "Modifier value between -3 and 3 to control how strongly wind should displace the model."
+      },
+      "invertDisplacementStrength": {
+        "type": "boolean",
+        "description": "Will invert the strength blend applied to the model, where vertices near the top will be effected less."
       },
       "materialOverrides": {
         "type": "object",
@@ -230,6 +253,41 @@
             "retainVanillaUvs": {
               "type": "boolean",
               "description": "Retain vanilla UVs on already textured areas of the model. Defaults to true."
+            },
+            "flatNormals": {
+              "type": "boolean",
+              "description": "Whether flat normals should be used instead of smooth normals. Defaults to false."
+            },
+            "upwardsNormals": {
+              "type": "boolean",
+              "description": "Whether normals should always point directly up. Defaults to false."
+            },
+            "castShadows": {
+              "type": "boolean",
+              "description": "Whether the model cast shadows. Defaults to true."
+            },
+            "receiveShadows": {
+              "type": "boolean",
+              "description": "Whether the model receive shadows cast by other objects. Defaults to true."
+            },
+            "terrainVertexSnap": {
+              "type": "boolean",
+              "description": "Whether the bottom-most vertices of the model should snap to the tile height. Defaults to false."
+            },
+            "shadowOpacityThreshold": {
+              "type": "number",
+              "description": "Specify an opacity threshold for shadow casting that better suits the model. Between 0 and 1."
+            },
+            "windDisplacementMode": {
+              "type": "string",
+              "description": "What type of wind displacement should be applied to the model. Defaults to DISABLED.",
+              "enum": [
+                "DISABLED",
+                "OBJECT",
+                "VERTEX",
+                "VERTEX_WITH_HEMISPHERE_BLEND",
+                "VERTEX_JIGGLE"
+              ]
             }
           }
         }
@@ -301,6 +359,41 @@
             "retainVanillaUvs": {
               "type": "boolean",
               "description": "Retain vanilla UVs on already textured areas of the model. Defaults to true."
+            },
+            "flatNormals": {
+              "type": "boolean",
+              "description": "Whether flat normals should be used instead of smooth normals. Defaults to false."
+            },
+            "upwardsNormals": {
+              "type": "boolean",
+              "description": "Whether normals should always point directly up. Defaults to false."
+            },
+            "castShadows": {
+              "type": "boolean",
+              "description": "Whether the model cast shadows. Defaults to true."
+            },
+            "receiveShadows": {
+              "type": "boolean",
+              "description": "Whether the model receive shadows cast by other objects. Defaults to true."
+            },
+            "terrainVertexSnap": {
+              "type": "boolean",
+              "description": "Whether the bottom-most vertices of the model should snap to the tile height. Defaults to false."
+            },
+            "shadowOpacityThreshold": {
+              "type": "number",
+              "description": "Specify an opacity threshold for shadow casting that better suits the model. Between 0 and 1."
+            },
+            "windDisplacementMode": {
+              "type": "string",
+              "description": "What type of wind displacement should be applied to the model. Defaults to DISABLED.",
+              "enum": [
+                "DISABLED",
+                "OBJECT",
+                "VERTEX",
+                "VERTEX_WITH_HEMISPHERE_BLEND",
+                "VERTEX_JIGGLE"
+              ]
             }
           }
         }
