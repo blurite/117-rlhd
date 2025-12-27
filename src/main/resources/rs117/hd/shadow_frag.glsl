@@ -26,6 +26,7 @@
 #version 330
 
 #include <uniforms/global.glsl>
+
 #include <utils/constants.glsl>
 
 #if SHADOW_MODE == SHADOW_MODE_DETAILED
@@ -54,8 +55,9 @@ void main() {
                 uvw.x = clamp(uvw.x, 0, .984375);
 
             opacity = texture(textureArray, uvw).a;
-
-            #if !SHADOW_TRANSPARENCY
+            #if SHADOW_TRANSPARENCY
+                opacity *= fOpacity;
+            #else
                 if (opacity < SHADOW_DEFAULT_OPACITY_THRESHOLD)
                     discard;
             #endif

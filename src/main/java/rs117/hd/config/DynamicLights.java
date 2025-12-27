@@ -27,28 +27,30 @@ package rs117.hd.config;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import static rs117.hd.utils.MathUtils.*;
+
 @Getter
 @RequiredArgsConstructor
 public enum DynamicLights
 {
 	NONE("Disabled", 0, 0),
-	FEW("Few", 12, 25),
-	SOME("Some", 24, 50),
-	MANY("Many", 32, 100);
+	FEW("Few", 4, 25),
+	SOME("Some", 8, 50),
+	MANY("Many", 12, 100);
 
-	public static final int MAX_LIGHTS_PER_TILE;
+	public static final int MAX_LAYERS_PER_TILE;
 
 	static {
 		int max = 0;
 		for (var e : values()) {
-			assert e.lightsPerTile % 4 == 0; // Needs to be divisible by 4
-			max = Math.max(max, e.lightsPerTile);
+			assert e.tiledLightingLayers % 4 == 0; // Needs to be divisible by 4
+			max = max(max, e.tiledLightingLayers);
 		}
-		MAX_LIGHTS_PER_TILE = max;
+		MAX_LAYERS_PER_TILE = max;
 	}
 
 	private final String name;
-	private final int lightsPerTile;
+	private final int tiledLightingLayers;
 	private final int maxSceneLights;
 
 	@Override

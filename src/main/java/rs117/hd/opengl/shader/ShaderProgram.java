@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import rs117.hd.opengl.uniforms.UniformBuffer;
@@ -24,6 +25,8 @@ public class ShaderProgram {
 	protected final ShaderTemplate shaderTemplate;
 
 	private int program;
+	@Getter
+	private boolean viable = true;
 
 	public ShaderProgram(Consumer<ShaderTemplate> templateConsumer) {
 		shaderTemplate = new ShaderTemplate();
@@ -31,7 +34,13 @@ public class ShaderProgram {
 	}
 
 	public void compile(ShaderIncludes includes) throws ShaderException, IOException {
-		int newProgram = shaderTemplate.compile(includes);
+		int newProgram;
+		try {
+			newProgram = shaderTemplate.compile(includes);
+		} catch (ShaderException ex) {
+			viable = false;
+			throw ex;
+		}
 
 		if (isValid())
 			destroy();
@@ -39,8 +48,11 @@ public class ShaderProgram {
 		program = newProgram;
 		assert isValid();
 
-		for (var prop : uniformProperties)
+		for (var prop : uniformProperties) {
 			prop.uniformIndex = glGetUniformLocation(program, prop.uniformName);
+			if (prop.uniformIndex == -1 && !prop.ignoreMissing)
+				log.warn("{} has missing or unused {}: {}", getClass().getSimpleName(), prop.getClass().getSimpleName(), prop.uniformName);
+		}
 
 		for (var ubo : includes.uniformBuffers) {
 			int bindingIndex = glGetUniformBlockIndex(program, ubo.getUniformBlockName());
@@ -86,6 +98,7 @@ public class ShaderProgram {
 	}
 
 	public void destroy() {
+		viable = true;
 		if (program == 0)
 			return;
 
@@ -102,6 +115,7 @@ public class ShaderProgram {
 		ShaderProgram program;
 		String uniformName;
 		int uniformIndex;
+		boolean ignoreMissing;
 
 		void destroy() {
 			uniformIndex = -1;
@@ -130,7 +144,8 @@ public class ShaderProgram {
 		public void set(int textureUnit) {
 			assert textureUnit >= GL_TEXTURE0 : "Did you accidentally pass in an image unit?";
 			assert program.isActive();
-			glUniform1i(uniformIndex, textureUnit - GL_TEXTURE0);
+			if (uniformIndex != -1)
+				glUniform1i(uniformIndex, textureUnit - GL_TEXTURE0);
 		}
 	}
 
@@ -266,5 +281,16 @@ public class ShaderProgram {
 
 	public Uniform4f addUniform4f(String uniformName) {
 		return addUniform(new Uniform4f(), uniformName);
+	}
+
+	public static class UniformMat4 extends UniformProperty {
+		public void set(float[] mat4) {
+			assert program.isActive();
+			glUniformMatrix4fv(uniformIndex, false, mat4);
+		}
+	}
+
+	public UniformMat4 addUniformMat4(String uniformName) {
+		return addUniform(new UniformMat4(), uniformName);
 	}
 }

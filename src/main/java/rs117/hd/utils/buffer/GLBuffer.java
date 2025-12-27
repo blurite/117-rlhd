@@ -35,6 +35,7 @@ import rs117.hd.utils.HDUtils;
 
 import static org.lwjgl.opengl.GL33C.*;
 import static rs117.hd.HdPlugin.checkGLErrors;
+import static rs117.hd.utils.MathUtils.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -56,7 +57,7 @@ public class GLBuffer
 		// Initialize both GL and CL buffers to buffers of a single byte or more,
 		// to ensure that valid buffers are given to compute dispatches.
 		// This is particularly important on Apple M2 Max, where an uninitialized buffer leads to a crash
-		ensureCapacity(Math.max(1, initialCapacity));
+		ensureCapacity(max(1, initialCapacity));
 	}
 
 	public void destroy() {
@@ -80,8 +81,14 @@ public class GLBuffer
 		}
 
 		numBytes = HDUtils.ceilPow2(numBytes);
-		if (log.isDebugEnabled() && numBytes > 1e6)
-			log.debug("Resizing buffer '{}'\t{}", name, String.format("%.2f MB -> %.2f MB", size / 1e6, numBytes / 1e6));
+		if (log.isTraceEnabled()) {
+			log.trace(
+				"{} buffer '{}'\t{}",
+				size > 0 ? "Resizing" : "Creating",
+				name,
+				String.format("%.2f MB -> %.2f MB", size / 1e6, numBytes / 1e6)
+			);
+		}
 
 		if (byteOffset > 0) {
 			// Create a new buffer and copy the old data to it
