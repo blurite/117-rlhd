@@ -9176,6 +9176,12 @@
     ]
   },
   {
+    "name": "CUSTOM_HOME",
+    "aabbs": [
+      [ 1536, 7168, 1728, 7360 ]
+    ]
+  },
+  {
     "name": "COCKROACH_DUNGEON",
     "aabbs": [
       [ 1152, 6400, 1216, 6464 ]
@@ -11279,6 +11285,7 @@
       "CHURCH_OF_AYASTER",
       "EMIRS_ARENA_UPPER",
       "YANILLE_INSTANCE",
+      "CUSTOM_HOME",
       "RATCATCHERS_HOUSE",
       "ENLIGHTENED_JOURNEY_CRASH_SITE"
     ],
