@@ -438,6 +438,7 @@ public class Zone {
 		// only set for static geometry as they require sorting
 		int radius;
 		int[] packedFaces;
+		char[] faceIndices; // maps packedFaces index to original model face index
 		byte[] renderPriorities;
 
 		static final int SKIP = 1; // temporary model is in a closer zone
@@ -545,7 +546,9 @@ public class Zone {
 			shift++;
 		}
 
-		int[] packedFaces = m.packedFaces = new int[(endpos - startpos) / ((3 * VERT_SIZE) >> 2)];
+		int maxFaces = (endpos - startpos) / ((3 * VERT_SIZE) >> 2);
+		int[] packedFaces = m.packedFaces = new int[maxFaces];
+		char[] faceIndices = m.faceIndices = new char[maxFaces];
 		int radius = 0;
 		char bufferIdx = 0;
 		for (int f = 0; f < faceCount; ++f) {
@@ -595,6 +598,7 @@ public class Zone {
 			packedFaces[bufferIdx] = ((fx & ((1 << 11) - 1)) << 21)
 									 | ((fy & ((1 << 10) - 1)) << 11)
 									 | (fz & ((1 << 11) - 1));
+			faceIndices[bufferIdx] = (char) f;
 			bufferIdx++;
 		}
 
@@ -637,6 +641,7 @@ public class Zone {
 			if (m.isTemp() || (m.flags & AlphaModel.TEMP) != 0) {
 				alphaModels.remove(i);
 				m.packedFaces = null;
+				m.faceIndices = null;
 				m.renderPriorities = null;
 				modelCache.add(m);
 			}
@@ -758,6 +763,7 @@ public class Zone {
 			ZoneRenderer.eboAlphaStaging.ensureCapacity(packedFaces.length * 3);
 
 			byte[] faceRenderPriorities = m.renderPriorities;
+			char[] faceIndices = m.faceIndices;
 			final int start = m.startpos / (VERT_SIZE >> 2); // ints to verts
 			if (faceRenderPriorities == null || m.modelOverride.disablePrioritySorting) {
 				for (int i = diameter - 1; i >= 0; --i) {
@@ -787,7 +793,8 @@ public class Zone {
 
 						for (int faceIdx = 0; faceIdx < cnt; ++faceIdx) {
 							final int face = faces[faceIdx];
-							final byte pri = faceRenderPriorities[face];
+							// Use faceIndices to map from packed index to original model face index
+							final byte pri = faceRenderPriorities[faceIndices[face]];
 							final int distIdx = numOfPriority[pri]++;
 
 							orderedFaces[pri][distIdx] = face;
@@ -909,6 +916,7 @@ public class Zone {
 				m2.zofz = (byte) (closestZoneZ - zz);
 
 				m2.packedFaces = m.packedFaces;
+				m2.faceIndices = m.faceIndices;
 				m2.renderPriorities = m.renderPriorities;
 				m2.radius = m.radius;
 

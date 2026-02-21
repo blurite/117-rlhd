@@ -148,9 +148,20 @@ public class MaterialManager {
 	}
 
 	public Material fromVanillaTexture(int vanillaTextureId) {
-		if (vanillaTextureId < 0 || vanillaTextureId >= VANILLA_TEXTURE_MAPPING.length)
+		if (VANILLA_TEXTURE_MAPPING == null || vanillaTextureId < 0 || vanillaTextureId >= VANILLA_TEXTURE_MAPPING.length)
 			return Material.NONE;
 		return VANILLA_TEXTURE_MAPPING[vanillaTextureId];
+	}
+
+	/**
+	 * Binds the material texture array to TEXTURE_UNIT_GAME.
+	 * Call this before rendering with shaders that sample from the texture array.
+	 */
+	public void bindTextureArray() {
+		if (texMaterialTextureArray != 0) {
+			glActiveTexture(TEXTURE_UNIT_GAME);
+			glBindTexture(GL_TEXTURE_2D_ARRAY, texMaterialTextureArray);
+		}
 	}
 
 	public void reload(boolean skipSceneReload) {

@@ -25,6 +25,8 @@
 package rs117.hd.renderer.zone;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.Set;
 import javax.inject.Inject;
@@ -34,13 +36,17 @@ import net.runelite.api.events.*;
 import net.runelite.api.hooks.*;
 import net.runelite.client.callback.RenderCallbackManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.plugins.Plugin;
+import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.ui.DrawManager;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.*;
 import rs117.hd.HdPlugin;
 import rs117.hd.HdPluginConfig;
 import rs117.hd.config.ColorFilter;
 import rs117.hd.config.DynamicLights;
 import rs117.hd.config.ShadowMode;
+import rs117.hd.opengl.shader.ParticleShaderProgram;
 import rs117.hd.opengl.shader.SceneShaderProgram;
 import rs117.hd.opengl.shader.ShaderException;
 import rs117.hd.opengl.shader.ShaderIncludes;
@@ -52,6 +58,7 @@ import rs117.hd.overlays.Timer;
 import rs117.hd.renderer.Renderer;
 import rs117.hd.scene.EnvironmentManager;
 import rs117.hd.scene.LightManager;
+import rs117.hd.scene.MaterialManager;
 import rs117.hd.scene.ModelOverrideManager;
 import rs117.hd.scene.ProceduralGenerator;
 import rs117.hd.scene.SceneContext;
@@ -140,10 +147,19 @@ public class ZoneRenderer implements Renderer {
 	private ShadowShaderProgram.Detailed detailedShadowProgram;
 
 	@Inject
+	private ParticleShaderProgram particleProgram;
+
+	@Inject
 	private JobSystem jobSystem;
 
 	@Inject
 	private UBOWorldViews uboWorldViews;
+
+	@Inject
+	private PluginManager pluginManager;
+
+	@Inject
+	private MaterialManager materialManager;
 
 	private final Camera sceneCamera = new Camera();
 	private final Camera directionalCamera = new Camera().setOrthographic(true);
@@ -159,6 +175,19 @@ public class ZoneRenderer implements Renderer {
 	private VAO.VAOList vaoA;
 	private VAO.VAOList vaoPO;
 	private VAO.VAOList vaoShadow;
+
+	// Particle plugin reflection cache
+	private Plugin cachedParticlePlugin;
+	private Method getRequiredBufferSizeMethod;
+	private Method getParticleSizeMethod;
+	private Method renderParticlesToBufferMethod;
+	private Method bindParticleTexturesMethod;
+	private boolean particleTexturesInitialized;
+
+	// Particle rendering resources
+	private int particleVao;
+	private int particleVbo;
+	private IntBuffer particleBuffer;
 
 	public static int indirectDrawCmds;
 	public static GpuIntBuffer indirectDrawCmdsStaging;
@@ -223,6 +252,13 @@ public class ZoneRenderer implements Renderer {
 		sceneProgram.compile(includes);
 		fastShadowProgram.compile(includes);
 		detailedShadowProgram.compile(includes);
+
+		// Particle shader is optional - don't let it crash the plugin
+		try {
+			particleProgram.compile(includes);
+		} catch (ShaderException | IOException e) {
+			log.warn("Failed to compile particle shader, particles will be disabled", e);
+		}
 	}
 
 	@Override
@@ -230,6 +266,7 @@ public class ZoneRenderer implements Renderer {
 		sceneProgram.destroy();
 		fastShadowProgram.destroy();
 		detailedShadowProgram.destroy();
+		particleProgram.destroy();
 	}
 
 	private void initializeBuffers() {
@@ -243,6 +280,8 @@ public class ZoneRenderer implements Renderer {
 		vaoA = new VAO.VAOList(eboAlpha);
 		vaoPO = new VAO.VAOList(eboAlpha);
 		vaoShadow = new VAO.VAOList(eboAlpha);
+
+		initializeParticleRendering();
 	}
 
 	private void destroyBuffers() {
@@ -267,6 +306,8 @@ public class ZoneRenderer implements Renderer {
 		if (indirectDrawCmdsStaging != null)
 			indirectDrawCmdsStaging.destroy();
 		indirectDrawCmdsStaging = null;
+
+		destroyParticleRendering();
 	}
 
 	@Override
@@ -752,6 +793,9 @@ public class ZoneRenderer implements Renderer {
 
 		// Render the scene
 		sceneCmd.execute();
+
+		// Render particles (after scene, with blend enabled)
+		renderParticles();
 
 		// TODO: Filler tiles
 		frameTimer.end(Timer.RENDER_SCENE);
@@ -1352,6 +1396,11 @@ public class ZoneRenderer implements Renderer {
 			// but keep it when doing >loading to loading
 			sceneFboValid = false;
 		}
+		if (state == GameState.LOADING) {
+			// Reset particle textures flag so they get reinitialized after scene load
+			// This ensures texture IDs stay in sync if the particle plugin recreates its manager
+			particleTexturesInitialized = false;
+		}
 	}
 
 	@Override
@@ -1404,6 +1453,255 @@ public class ZoneRenderer implements Renderer {
 		} catch (Throwable ex) {
 			log.error("Error during swapScene:", ex);
 			plugin.stopPlugin();
+		}
+	}
+
+	// ==================== Particle Rendering (Reflection-based) ====================
+	// This demonstrates how 117HD can integrate with the ParticlePlugin without
+	// any compile-time dependency, using reflection to discover and call the plugin.
+
+	// GPU plugin vertex format: 24 bytes per vertex
+	// index 0: vec3(x, y, z) - 12 bytes (3 floats)
+	// index 1: int abhsl - 4 bytes
+	// index 2: short vec4(id, x, y, z) - 8 bytes
+	private static final int PARTICLE_VERT_SIZE = 24;
+	private static final int PARTICLE_BUFFER_SIZE = 4 * 1024 * 1024; // 4MB
+
+	private void initializeParticleRendering() {
+		// Create particle VAO/VBO
+		particleVao = glGenVertexArrays();
+		particleVbo = glGenBuffers();
+
+		glBindVertexArray(particleVao);
+		glBindBuffer(GL_ARRAY_BUFFER, particleVbo);
+		glBufferData(GL_ARRAY_BUFFER, PARTICLE_BUFFER_SIZE, GL_DYNAMIC_DRAW);
+
+		// Position (vec3 float)
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, PARTICLE_VERT_SIZE, 0);
+
+		// Color (int)
+		glEnableVertexAttribArray(1);
+		glVertexAttribIPointer(1, 1, GL_INT, PARTICLE_VERT_SIZE, 12);
+
+		// Extra (short vec4)
+		glEnableVertexAttribArray(2);
+		glVertexAttribIPointer(2, 4, GL_SHORT, PARTICLE_VERT_SIZE, 16);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+
+		// Allocate particle buffer
+		particleBuffer = BufferUtils.createIntBuffer(PARTICLE_BUFFER_SIZE / 4);
+	}
+
+	private void destroyParticleRendering() {
+		if (particleVao != 0) {
+			glDeleteVertexArrays(particleVao);
+			particleVao = 0;
+		}
+		if (particleVbo != 0) {
+			glDeleteBuffers(particleVbo);
+			particleVbo = 0;
+		}
+		particleBuffer = null;
+		clearParticlePluginCache();
+	}
+
+	/**
+	 * Finds the ParticlePlugin via reflection if it exists and is enabled.
+	 */
+	private Plugin findParticlePlugin() {
+		// Check if cached plugin is still valid and enabled
+		if (cachedParticlePlugin != null) {
+			if (pluginManager.isPluginEnabled(cachedParticlePlugin)) {
+				// Ensure textures are initialized for this GL context
+				if (!particleTexturesInitialized) {
+					initializeParticleTextures(cachedParticlePlugin);
+				}
+				return cachedParticlePlugin;
+			}
+			// Plugin was disabled, clear cache
+			clearParticlePluginCache();
+		}
+
+		// Search for particle plugin by class name
+		for (Plugin plugin : pluginManager.getPlugins()) {
+			if (plugin.getClass().getSimpleName().equals("ParticlePlugin")) {
+				if (pluginManager.isPluginEnabled(plugin)) {
+					cacheParticlePlugin(plugin);
+					return cachedParticlePlugin;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Initializes particle textures for the current GL context.
+	 */
+	private void initializeParticleTextures(Plugin plugin) {
+		if (particleTexturesInitialized) {
+			return;
+		}
+
+		try {
+			Method initMethod = plugin.getClass().getMethod("initializeParticleTexturesForContext");
+			initMethod.invoke(plugin);
+			particleTexturesInitialized = true;
+			log.debug("Particle textures initialized for 117HD context");
+		} catch (ReflectiveOperationException e) {
+			log.warn("Failed to initialize particle textures", e);
+		}
+	}
+
+	private void cacheParticlePlugin(Plugin plugin) {
+		try {
+			Class<?> clazz = plugin.getClass();
+			getRequiredBufferSizeMethod = clazz.getMethod("getRequiredBufferSize");
+			getParticleSizeMethod = clazz.getMethod("getParticleSize");
+			renderParticlesToBufferMethod = clazz.getMethod("renderParticlesToBuffer",
+				IntBuffer.class, float.class, float.class, int.class, int.class, int.class, float.class);
+
+			// Try to get multi-tier particle texture binding method (optional)
+			try {
+				bindParticleTexturesMethod = clazz.getMethod("bindParticleTextures", int.class);
+			} catch (NoSuchMethodException e) {
+				// Multi-tier particle textures not available
+				bindParticleTexturesMethod = null;
+			}
+
+			cachedParticlePlugin = plugin;
+
+			// Initialize particle textures for this GL context
+			initializeParticleTextures(plugin);
+		} catch (NoSuchMethodException e) {
+			log.warn("Failed to find particle plugin methods via reflection", e);
+			clearParticlePluginCache();
+		}
+	}
+
+	private void clearParticlePluginCache() {
+		cachedParticlePlugin = null;
+		getRequiredBufferSizeMethod = null;
+		getParticleSizeMethod = null;
+		renderParticlesToBufferMethod = null;
+		bindParticleTexturesMethod = null;
+		particleTexturesInitialized = false;
+	}
+
+	/**
+	 * Renders particles using the ParticlePlugin via reflection.
+	 */
+	private void renderParticles() {
+		if (!particleProgram.isValid() || particleVao == 0 || particleBuffer == null) {
+			return;
+		}
+
+		Plugin particlePlugin = findParticlePlugin();
+		if (particlePlugin == null || getRequiredBufferSizeMethod == null) {
+			return;
+		}
+
+		try {
+			// Get required buffer size
+			int requiredSize = (int) getRequiredBufferSizeMethod.invoke(particlePlugin);
+			if (requiredSize == 0) {
+				return;
+			}
+
+			// Prepare buffer
+			particleBuffer.clear();
+
+			// Get camera info from scene camera
+			float cameraYawRad = (float) Math.toRadians(sceneCamera.getYaw());
+			float cameraPitchRad = (float) Math.toRadians(sceneCamera.getPitch());
+			int cameraX = (int) sceneCamera.getPositionX();
+			int cameraY = (int) sceneCamera.getPositionY();
+			int cameraZ = (int) sceneCamera.getPositionZ();
+
+			// Get particle size and render to buffer
+			float particleSize = (float) getParticleSizeMethod.invoke(particlePlugin);
+			float baseSize = particleSize / 3.0f;
+			int rendered = (int) renderParticlesToBufferMethod.invoke(
+				particlePlugin,
+				particleBuffer,
+				cameraYawRad, cameraPitchRad,
+				cameraX, cameraY, cameraZ,
+				baseSize
+			);
+
+			if (rendered == 0) {
+				return;
+			}
+
+			// Instance count = bytes written / bytes per instance
+			int instanceCount = particleBuffer.position() / (PARTICLE_VERT_SIZE / 4);
+			particleBuffer.flip();
+
+			// Upload to GPU
+			glBindBuffer(GL_ARRAY_BUFFER, particleVbo);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, particleBuffer);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			// Set up render state for particles
+			particleProgram.use();
+
+			// Set projection/view uniforms from scene camera
+			particleProgram.setProjection(sceneCamera.getProjectionMatrix());
+			particleProgram.setView(sceneCamera.getViewMatrix());
+
+			// Pass camera position for spherical billboarding (computed per-particle in shader)
+			particleProgram.setCamPos(cameraX, cameraY, cameraZ);
+
+			// Bind all particle texture tiers (64, 128, 256, 1024)
+			if (bindParticleTexturesMethod != null) {
+				try {
+					// Bind all 4 tier textures starting at the base texture unit
+					bindParticleTexturesMethod.invoke(particlePlugin, GL_TEXTURE0 + ParticleShaderProgram.TEXTURE_UNIT_PARTICLE_64);
+				} catch (ReflectiveOperationException e) {
+					// Multi-tier particle textures not available
+				}
+			}
+
+			// Enable blending, disable face culling, disable depth writes
+			// Use same blend function as scene for consistency (separate RGB and alpha)
+			glEnable(GL_BLEND);
+			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
+			glDisable(GL_CULL_FACE);
+			glDepthMask(false);
+			glEnable(GL_DEPTH_TEST);
+
+			// Draw particles using instanced rendering
+			// Each particle is one instance; shader generates 6 vertices per quad using gl_VertexID
+			glBindVertexArray(particleVao);
+
+			// Set attribute divisors for instanced rendering (all attributes advance per instance)
+			glVertexAttribDivisor(0, 1);
+			glVertexAttribDivisor(1, 1);
+			glVertexAttribDivisor(2, 1);
+
+			// Draw: 6 vertices per instance (2 triangles = 1 quad), instanceCount instances
+			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instanceCount);
+
+			// Reset divisors for normal rendering
+			glVertexAttribDivisor(0, 0);
+			glVertexAttribDivisor(1, 0);
+			glVertexAttribDivisor(2, 0);
+
+			glBindVertexArray(0);
+
+			// Restore state
+			glDepthMask(true);
+			glEnable(GL_CULL_FACE);
+			glDisable(GL_BLEND);
+
+			// Restore scene program
+			sceneProgram.use();
+
+		} catch (ReflectiveOperationException e) {
+			log.warn("Failed to render particles via reflection", e);
+			clearParticlePluginCache();
 		}
 	}
 }
