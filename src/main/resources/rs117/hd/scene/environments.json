@@ -1780,11 +1780,6 @@
     "fogDepth": 10
   },
   {
-    "area": "LAND_OF_SNOW",
-    "fogColor": "#c9d1d1",
-    "fogDepth": 10
-  },
-  {
     "area": "SCOURGES_HOUSE",
     "directionalColor": "#9ea3a8",
     "directionalStrength": 2.5,
