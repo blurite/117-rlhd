@@ -1,12 +1,20 @@
 [
   {
-    "name": "Land of Snow and Cockroach dungeon snow",
+    "name": "Land of Snow",
+    "area": "LAND_OF_SNOW",
     "underlayIds": [
       1083, 1150, 1153, 1122
     ],
     "groundMaterial": "SNOW_1"
   },
-
+  {
+    "name": "Scourges house",
+    "area": "SCOURGES_HOUSE",
+    "underlayIds": [
+      1083, 1150, 1153, 1122
+    ],
+    "groundMaterial": "SNOW_1"
+  },
   {
     "name": "DEFAULT_GRASS",
     "groundMaterial": "OVERWORLD_GRASS_1"
