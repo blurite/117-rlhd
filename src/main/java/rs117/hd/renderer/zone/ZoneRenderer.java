@@ -1663,14 +1663,13 @@ public class ZoneRenderer implements Renderer {
 					// Multi-tier particle textures not available
 				}
 			}
+			// Restore active texture unit — bindParticleTextures may leave it on a non-zero unit
+			glActiveTexture(GL_TEXTURE0);
 
-			// Enable blending, disable face culling, disable depth writes
-			// Use same blend function as scene for consistency (separate RGB and alpha)
-			glEnable(GL_BLEND);
+			// Disable face culling and depth writes; blend and depth test are already enabled by scenePass
 			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
 			glDisable(GL_CULL_FACE);
 			glDepthMask(false);
-			glEnable(GL_DEPTH_TEST);
 
 			// Draw particles using instanced rendering
 			// Each particle is one instance; shader generates 6 vertices per quad using gl_VertexID
@@ -1691,13 +1690,9 @@ public class ZoneRenderer implements Renderer {
 
 			glBindVertexArray(0);
 
-			// Restore state
+			// Restore state changed for particle rendering
 			glDepthMask(true);
 			glEnable(GL_CULL_FACE);
-			glDisable(GL_BLEND);
-
-			// Restore scene program
-			sceneProgram.use();
 
 		} catch (ReflectiveOperationException e) {
 			log.warn("Failed to render particles via reflection", e);
