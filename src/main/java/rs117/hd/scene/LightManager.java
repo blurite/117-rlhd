@@ -171,7 +171,10 @@ public class LightManager {
 
 		if (reloadLights) {
 			reloadLights = false;
-			loadSceneLights(sceneContext, null);
+			sceneContext.lights.clear();
+			sceneContext.knownProjectiles.clear();
+			loadSceneLights(sceneContext);
+			swapSceneLights(sceneContext, null);
 
 			client.getNpcs().forEach(npc -> {
 				addNpcLights(npc);
@@ -616,24 +619,7 @@ public class LightManager {
 		return plugin.configProjectileLights && !(pluginManager.isPluginEnabled(entityHiderPlugin) && entityHiderConfig.hideProjectiles());
 	}
 
-	public void loadSceneLights(SceneContext sceneContext, @Nullable SceneContext oldSceneContext)
-	{
-		if (oldSceneContext == null) {
-			sceneContext.lights.clear();
-			sceneContext.knownProjectiles.clear();
-		} else {
-			// Copy over NPC and projectile lights from the old scene
-			ArrayList<Light> lightsToKeep = new ArrayList<>();
-			for (Light light : oldSceneContext.lights)
-				if (light.actor != null || light.projectile != null)
-					lightsToKeep.add(light);
-
-			sceneContext.lights.addAll(lightsToKeep);
-			for (var light : lightsToKeep)
-				if (light.projectile != null && oldSceneContext.knownProjectiles.contains(light.projectile))
-					sceneContext.knownProjectiles.add(light.projectile);
-		}
-
+	public void loadSceneLights(SceneContext sceneContext) {
 		for (Light light : WORLD_LIGHTS) {
 			assert light.worldPoint != null;
 			if (sceneContext.sceneBounds.contains(light.worldPoint))
@@ -668,13 +654,29 @@ public class LightManager {
 				}
 			}
 		}
+	}
 
+	public void swapSceneLights(SceneContext sceneContext, @Nullable SceneContext oldSceneContext) {
 		// Force lights to instantly appear when spawning them as part of a new scene
-		for (var light : sceneContext.lights)
-			light.fadeInDuration = 0;
+		for (int i = 0; i < sceneContext.lights.size(); i++)
+			sceneContext.lights.get(i).fadeInDuration = 0;
 
 		// Set the plane to an unreachable plane, forcing the first `toggleTemporaryVisibility` call to not fade
 		currentPlane = -1;
+
+		if (oldSceneContext == null)
+			return;
+
+		// Copy over NPC and projectile lights from the old scene
+		ArrayList<Light> lightsToKeep = new ArrayList<>();
+		for (Light light : oldSceneContext.lights)
+			if (light.actor != null || light.projectile != null)
+				lightsToKeep.add(light);
+
+		sceneContext.lights.addAll(lightsToKeep);
+		for (var light : lightsToKeep)
+			if (light.projectile != null && oldSceneContext.knownProjectiles.contains(light.projectile))
+				sceneContext.knownProjectiles.add(light.projectile);
 	}
 
 	private void removeLightIf(Predicate<Light> predicate) {
@@ -818,7 +820,17 @@ public class LightManager {
 			}
 		}
 
-		sceneContext.lights.removeIf(light -> light.tileObject == tileObject);
+		for (int i = 0; i < sceneContext.lights.size(); ++i) {
+			var light = sceneContext.lights.get(i);
+			if (light.tileObject == tileObject) {
+				if (light.tileObjectId == tileObjectId)
+					return; // Duplicate spawn, probably from spawn event right after scene load
+
+				// Schedule despawning of the old light
+				light.markedForRemoval = true;
+			}
+		}
+
 		spawnLights(sceneContext, tileObject, tileObjectId);
 	}
 

@@ -33,14 +33,12 @@ import rs117.hd.HdPlugin;
 import static rs117.hd.utils.MathUtils.*;
 
 @Slf4j
-public class GpuIntBuffer
-{
+public class GpuIntBuffer {
 	@Getter
 	private IntBuffer buffer;
 	private final boolean ownsBuffer;
 
-	public GpuIntBuffer()
-	{
+	public GpuIntBuffer() {
 		this(65536);
 	}
 
@@ -57,6 +55,11 @@ public class GpuIntBuffer
 
 	public GpuIntBuffer(IntBuffer buffer) {
 		this.buffer = buffer;
+		ownsBuffer = false;
+	}
+
+	public GpuIntBuffer(GLMappedBuffer buffer) {
+		this.buffer = buffer.intView();
 		ownsBuffer = false;
 	}
 
@@ -127,8 +130,9 @@ public class GpuIntBuffer
 		int textureFaceIdx
 	) {
 		buffer.put((y & 0xFFFF) << 16 | x & 0xFFFF);
-		buffer.put(float16(u) << 16 | z & 0xFFFF);
-		buffer.put(float16(w) << 16 | float16(v));
+		buffer.put(z & 0xFFFF);
+		buffer.put(float16(v) << 16 | float16(u));
+		buffer.put(float16(w));
 		// Unnormalized normals, assumed to be within short max
 		buffer.put((ny & 0xFFFF) << 16 | nx & 0xFFFF);
 		buffer.put(nz & 0xFFFF);
@@ -156,8 +160,7 @@ public class GpuIntBuffer
 		return textureFaceIdx;
 	}
 
-	public int position()
-	{
+	public int position() {
 		return buffer.position();
 	}
 
