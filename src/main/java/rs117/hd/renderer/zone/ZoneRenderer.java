@@ -1413,9 +1413,9 @@ public class ZoneRenderer implements Renderer {
 			// Prepare buffer
 			particleBuffer.clear();
 
-			// Get camera info from scene camera
-			float cameraYawRad = (float) Math.toRadians(sceneCamera.getYaw());
-			float cameraPitchRad = (float) Math.toRadians(sceneCamera.getPitch());
+			// Get camera info from scene camera (orientation is already in radians)
+			float cameraYawRad = sceneCamera.getYaw();
+			float cameraPitchRad = sceneCamera.getPitch();
 			int cameraX = (int) sceneCamera.getPositionX();
 			int cameraY = (int) sceneCamera.getPositionY();
 			int cameraZ = (int) sceneCamera.getPositionZ();
