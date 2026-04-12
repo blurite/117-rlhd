@@ -1361,7 +1361,7 @@ public class ZoneRenderer implements Renderer {
 			getRequiredBufferSizeMethod = clazz.getMethod("getRequiredBufferSize");
 			getParticleSizeMethod = clazz.getMethod("getParticleSize");
 			renderParticlesToBufferMethod = clazz.getMethod("renderParticlesToBuffer",
-				IntBuffer.class, float.class, float.class, int.class, int.class, int.class, float.class);
+				IntBuffer.class, float.class, float.class, int.class, int.class, int.class, float.class, int.class);
 
 			// Try to get multi-tier particle texture binding method (optional)
 			try {
@@ -1428,7 +1428,8 @@ public class ZoneRenderer implements Renderer {
 				particleBuffer,
 				cameraYawRad, cameraPitchRad,
 				cameraX, cameraY, cameraZ,
-				baseSize
+				baseSize,
+				plugin.getDrawDistance()
 			);
 
 			if (rendered == 0) {
