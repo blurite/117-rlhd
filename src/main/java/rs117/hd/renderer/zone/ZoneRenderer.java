@@ -160,8 +160,9 @@ public class ZoneRenderer implements Renderer {
 	public final ShadowCasterVolume directionalShadowCasterVolume = new ShadowCasterVolume(directionalCamera);
 
 	public final RenderState renderState = new RenderState();
-	public final CommandBuffer sceneCmd = new CommandBuffer("Scene", renderState);
-	public final CommandBuffer directionalCmd = new CommandBuffer("Directional", renderState);
+	public final CommandBuffer sceneCmd = new CommandBuffer("Scene");
+	public final CommandBuffer directionalCmd = new CommandBuffer("Directional");
+	public final CommandBuffer gapFillerCmd = new CommandBuffer("GapFiller");
 
 	private GLBuffer indirectDrawCmds;
 	public static GpuIntBuffer indirectDrawCmdsStaging;
@@ -212,10 +213,11 @@ public class ZoneRenderer implements Renderer {
 
 		sceneCmd.setFrameTimer(frameTimer);
 		directionalCmd.setFrameTimer(frameTimer);
+		gapFillerCmd.setFrameTimer(frameTimer);
 
 		jobSystem.startUp(config.cpuUsageLimit());
 		uboWorldViews.initialize(UNIFORM_BLOCK_WORLD_VIEWS);
-		sceneManager.initialize(renderState, uboWorldViews);
+		sceneManager.initialize(uboWorldViews);
 		modelStreamingManager.initialize();
 
 		// Force updates that only run when the cameras change
@@ -308,7 +310,7 @@ public class ZoneRenderer implements Renderer {
 
 	@Override
 	public void processConfigChanges(Set<String> keys) {
-		if (keys.contains(KEY_ASYNC_MODEL_PROCESSING) || keys.contains(KEY_ASYNC_MODEL_CACHE_SIZE))
+		if (keys.contains(KEY_ASYNC_MODEL_PROCESSING))
 			modelStreamingManager.reinitialize();
 	}
 
@@ -650,6 +652,7 @@ public class ZoneRenderer implements Renderer {
 		indirectDrawCmdsStaging.clear();
 		sceneCmd.reset();
 		directionalCmd.reset();
+		gapFillerCmd.reset();
 		renderState.reset();
 
 		eboAlpha.orphan();
@@ -771,7 +774,7 @@ public class ZoneRenderer implements Renderer {
 		renderState.ido.set(indirectDrawCmds.id);
 
 		CommandBuffer.SKIP_DEPTH_MASKING = true;
-		directionalCmd.execute();
+		directionalCmd.execute(renderState);
 		CommandBuffer.SKIP_DEPTH_MASKING = false;
 
 		glBindVertexArray(0);
@@ -819,13 +822,17 @@ public class ZoneRenderer implements Renderer {
 		renderState.depthFunc.set(GL_GEQUAL);
 		renderState.blendFunc.set(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
 
-		// Render the scene
-		sceneCmd.execute();
+		if (!gapFillerCmd.isEmpty()) {
+			renderState.depthMask.set(false);
+			gapFillerCmd.execute(renderState);
+			renderState.depthMask.set(true);
+		}
+
+		sceneCmd.execute(renderState);
 
 		// Render particles (after scene, with blend enabled)
 		renderParticles();
 
-		// TODO: Filler tiles
 		frameTimer.end(Timer.RENDER_SCENE);
 
 		glBindVertexArray(0);
@@ -925,8 +932,12 @@ public class ZoneRenderer implements Renderer {
 				return;
 
 			frameTimer.begin(Timer.DRAW_ZONE_OPAQUE);
-			if (!sceneManager.isRoot(ctx) || z.inSceneFrustum)
+			if (!sceneManager.isRoot(ctx) || z.inSceneFrustum) {
 				z.renderOpaque(sceneCmd, ctx, false);
+
+				if (z.hasGapFiller)
+					z.renderOpaqueLevel(gapFillerCmd, Zone.LEVEL_GAP_FILLER);
+			}
 
 			final boolean isSquashed = ctx.uboWorldViewStruct != null && ctx.uboWorldViewStruct.isSquashed();
 			if (!isSquashed && (!sceneManager.isRoot(ctx) || z.inShadowFrustum)) {
