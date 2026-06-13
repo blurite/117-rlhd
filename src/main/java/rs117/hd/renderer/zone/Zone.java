@@ -379,7 +379,7 @@ public class Zone implements Destructible {
 		lastDrawMode = STATIC_UNSORTED;
 		lastVao = glVao;
 		lastTboF = tboF.getTexId();
-		flush(cmd);
+		flush(cmd, null);
 	}
 
 	void renderOpaqueLevel(CommandBuffer cmd, int level) {
@@ -393,7 +393,7 @@ public class Zone implements Destructible {
 		lastDrawMode = STATIC_UNSORTED;
 		lastVao = glVao;
 		lastTboF = tboF.getTexId();
-		flush(cmd);
+		flush(cmd, null);
 	}
 
 	private static void pushRange(int start, int end) {
@@ -435,6 +435,7 @@ public class Zone implements Destructible {
 		static final int SKIP = 1; // temporary model is in a closer zone
 		static final int TEMP = 2; // temporary model added to a closer zone
 		static final int SORT_COMPLETED = 4;
+		static final int PARTICLE = 8;
 
 		void setSorted() {
 			flags |= SORT_COMPLETED;
@@ -640,6 +641,29 @@ public class Zone implements Destructible {
 		return m;
 	}
 
+	synchronized void addTempParticleModel(int vao, int startpos, int endpos, int level, int x, int y, int z) {
+		AlphaModel m = ALPHA_MODEL_POOL.acquire();
+		m.id = -1;
+		m.modelOverride = null;
+		m.startpos = startpos;
+		m.endpos = endpos;
+		m.x = (short) x;
+		m.y = (short) y;
+		m.z = (short) z;
+		m.vao = vao;
+		m.tboF = -1;
+		m.rid = -1;
+		m.level = (byte) level;
+		m.lx = m.lz = m.ux = m.uz = -1;
+		m.flags = AlphaModel.PARTICLE;
+		m.zofx = m.zofz = 0;
+		m.packedFaces = null;
+		m.sortedFaces = null;
+		m.sortedFacesLen = 0;
+		m.asyncSortIdx = -1;
+		alphaModels.add(m);
+	}
+
 	synchronized void postAlphaPass() {
 		sortedAlphaFacesUpload.waitForCompletion();
 		alphaSortingJob.waitForCompletion();
@@ -660,6 +684,7 @@ public class Zone implements Destructible {
 	private static final int STATIC = 1;
 	private static final int TEMP = 2;
 	private static final int STATIC_UNSORTED = 3;
+	private static final int PARTICLE = 4;
 
 	private static int alphaFaceCount;
 	private static int eboAlphaOffset;
@@ -717,7 +742,8 @@ public class Zone implements Destructible {
 		int level,
 		WorldViewContext ctx,
 		boolean isShadowPass,
-		boolean includeRoof
+		boolean includeRoof,
+		ParticleRenderer particleRenderer
 	) {
 		if (alphaModels.isEmpty())
 			return;
@@ -749,7 +775,11 @@ public class Zone implements Destructible {
 				continue;
 
 			int drawMode = STATIC;
-			if (m.isTemp()) {
+			if ((m.flags & AlphaModel.PARTICLE) != 0) {
+				if (isShadowPass || particleRenderer == null)
+					continue;
+				drawMode = PARTICLE;
+			} else if (m.isTemp()) {
 				// these are already sorted and so just requires a glMultiDrawArrays() from the active vao
 				drawMode = TEMP;
 			} else if (isShadowPass || m.asyncSortIdx < 0) {
@@ -762,7 +792,7 @@ public class Zone implements Destructible {
 				lastzx != (zx - m.zofx) ||
 				lastzz != (zz - m.zofz)
 			) {
-				flush(cmd);
+				flush(cmd, particleRenderer);
 				lastDrawMode = drawMode;
 				lastVao = m.vao;
 				lastTboF = m.tboF;
@@ -797,13 +827,22 @@ public class Zone implements Destructible {
 			sortedAlphaFacesUpload.queue();
 		}
 
-		flush(cmd);
+		flush(cmd, particleRenderer);
 
 		cmd.DepthMask(true);
 	}
 
-	private void flush(CommandBuffer cmd) {
-		if (lastDrawMode == STATIC) {
+	interface ParticleRenderer {
+		void render(CommandBuffer cmd, int[] startpos, int[] endpos, int count);
+	}
+
+	private void flush(CommandBuffer cmd, ParticleRenderer particleRenderer) {
+		if (lastDrawMode == PARTICLE) {
+			if (drawIdx != 0 && particleRenderer != null) {
+				particleRenderer.render(cmd, drawOff, drawEnd, drawIdx);
+				drawIdx = 0;
+			}
+		} else if (lastDrawMode == STATIC) {
 			if (alphaFaceCount > 0 && lastVao != 0) {
 				int vertexCount = alphaFaceCount * 3;
 				long byteOffset = 4L * (eboAlphaOffset - vertexCount);

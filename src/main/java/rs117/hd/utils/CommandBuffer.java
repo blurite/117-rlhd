@@ -43,6 +43,7 @@ public class CommandBuffer {
 	private static final int GL_FENCE_SYNC = 14;
 
 	private static final int GL_EXECUTE_SUB_COMMAND_BUFFER = 15;
+	private static final int GL_CALLBACK = 16;
 
 	private static final long INT_MASK = 0xFFFF_FFFFL;
 	private static final int DRAW_MODE_MASK = 0xF;
@@ -125,6 +126,12 @@ public class CommandBuffer {
 		assert !subCommandBuffer.includes(this);
 		int objectIdx = writeObject(subCommandBuffer);
 		cmd[writeHead++] = GL_EXECUTE_SUB_COMMAND_BUFFER & 0xFF | (long) objectIdx << 8;
+	}
+
+	public void Callback(Runnable callback) {
+		ensureCapacity(1);
+		int objectIdx = writeObject(callback);
+		cmd[writeHead++] = GL_CALLBACK & 0xFF | (long) objectIdx << 8;
 	}
 
 	public void DepthMask(boolean writeDepth) {
@@ -426,6 +433,14 @@ public class CommandBuffer {
 						} finally {
 							callStack.pop();
 						}
+						break;
+					}
+					case GL_CALLBACK: {
+						renderState.apply();
+						((Runnable) objects[(int) (data >> 8)]).run();
+						renderState.vao.invalidate();
+						renderState.blendFunc.invalidate();
+						renderState.depthMask.invalidate();
 						break;
 					}
 					default:

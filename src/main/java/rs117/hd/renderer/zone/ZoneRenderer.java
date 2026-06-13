@@ -180,6 +180,7 @@ public class ZoneRenderer implements Renderer {
 	private Method getRequiredBufferSizeMethod;
 	private Method getParticleSizeMethod;
 	private Method renderParticlesToBufferMethod;
+	private Method getAlphaParticleBucketSnapshotMethod;
 	private Method bindParticleTexturesMethod;
 	private boolean particleTexturesInitialized;
 
@@ -187,6 +188,11 @@ public class ZoneRenderer implements Renderer {
 	private int particleVao;
 	private int particleVbo;
 	private IntBuffer particleBuffer;
+	private int particleBufferSize = PARTICLE_BUFFER_SIZE;
+	private Plugin alphaParticlePlugin;
+	private int alphaParticleStart;
+	private int alphaParticleEnd;
+	private boolean drawAlphaParticlesDirect;
 
 	@Override
 	public boolean supportsGpu(GLCapabilities glCaps) {
@@ -830,8 +836,10 @@ public class ZoneRenderer implements Renderer {
 
 		sceneCmd.execute(renderState);
 
-		// Render particles (after scene, with blend enabled)
-		renderParticles();
+		if (drawAlphaParticlesDirect)
+			renderParticleAlphaRange(alphaParticleStart, alphaParticleEnd, true);
+
+		clearAlphaParticleState();
 
 		frameTimer.end(Timer.RENDER_SCENE);
 
@@ -984,11 +992,11 @@ public class ZoneRenderer implements Renderer {
 				final boolean isSquashed = ctx.uboWorldViewStruct != null && ctx.uboWorldViewStruct.isSquashed();
 				if (!isSquashed && (!sceneManager.isRoot(ctx) || z.inShadowFrustum)) {
 					directionalCmd.SetShader(plugin.configShadowMode == ShadowMode.DETAILED ? detailedShadowProgram : fastShadowProgram);
-					z.renderAlpha(directionalCmd, zx - offset, zz - offset, level, ctx, true, shouldDrawRoofShadows);
+					z.renderAlpha(directionalCmd, zx - offset, zz - offset, level, ctx, true, shouldDrawRoofShadows, null);
 				}
 
 				if (!sceneManager.isRoot(ctx) || z.inSceneFrustum)
-					z.renderAlpha(sceneCmd, zx - offset, zz - offset, level, ctx, false, false);
+					z.renderAlpha(sceneCmd, zx - offset, zz - offset, level, ctx, false, false, this::renderParticleAlphaRanges);
 			}
 			frameTimer.end(Timer.DRAW_ZONE_ALPHA);
 
@@ -1017,6 +1025,10 @@ public class ZoneRenderer implements Renderer {
 					directionalCmd.ExecuteSubCommandBuffer(ctx.vaoDirectionalCmd);
 
 					sceneCmd.ExecuteSubCommandBuffer(ctx.vaoSceneCmd);
+					if (sceneManager.isRoot(ctx)) {
+						clearAlphaParticleState();
+						prepareParticlesForAlpha(ctx);
+					}
 					break;
 				case DrawCallbacks.PASS_ALPHA:
 					modelStreamingManager.ensureAsyncUploadsComplete(null);
@@ -1293,6 +1305,7 @@ public class ZoneRenderer implements Renderer {
 
 		glBindVertexArray(particleVao);
 		glBindBuffer(GL_ARRAY_BUFFER, particleVbo);
+		particleBufferSize = PARTICLE_BUFFER_SIZE;
 		glBufferData(GL_ARRAY_BUFFER, PARTICLE_BUFFER_SIZE, GL_DYNAMIC_DRAW);
 
 		// Position (vec3 float)
@@ -1381,6 +1394,11 @@ public class ZoneRenderer implements Renderer {
 			getParticleSizeMethod = clazz.getMethod("getParticleSize");
 			renderParticlesToBufferMethod = clazz.getMethod("renderParticlesToBuffer",
 				IntBuffer.class, float.class, float.class, int.class, int.class, int.class, float.class, int.class);
+			try {
+				getAlphaParticleBucketSnapshotMethod = clazz.getMethod("getAlphaParticleBucketSnapshot");
+			} catch (NoSuchMethodException e) {
+				getAlphaParticleBucketSnapshotMethod = null;
+			}
 
 			// Try to get multi-tier particle texture binding method (optional)
 			try {
@@ -1405,14 +1423,36 @@ public class ZoneRenderer implements Renderer {
 		getRequiredBufferSizeMethod = null;
 		getParticleSizeMethod = null;
 		renderParticlesToBufferMethod = null;
+		getAlphaParticleBucketSnapshotMethod = null;
 		bindParticleTexturesMethod = null;
 		particleTexturesInitialized = false;
+		clearAlphaParticleState();
+	}
+
+	private void clearAlphaParticleState() {
+		alphaParticlePlugin = null;
+		alphaParticleStart = 0;
+		alphaParticleEnd = 0;
+		drawAlphaParticlesDirect = false;
+	}
+
+	private void ensureParticleBufferCapacity(int requiredSize) {
+		if (requiredSize <= particleBufferSize)
+			return;
+
+		while (particleBufferSize < requiredSize)
+			particleBufferSize *= 2;
+
+		glBindBuffer(GL_ARRAY_BUFFER, particleVbo);
+		glBufferData(GL_ARRAY_BUFFER, particleBufferSize, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		particleBuffer = BufferUtils.createIntBuffer(particleBufferSize / Integer.BYTES);
 	}
 
 	/**
-	 * Renders particles using the ParticlePlugin via reflection.
+	 * Prepares particles for the scene alpha command buffer.
 	 */
-	private void renderParticles() {
+	private void prepareParticlesForAlpha(WorldViewContext ctx) {
 		if (!particleProgram.isValid() || particleVao == 0 || particleBuffer == null) {
 			return;
 		}
@@ -1428,6 +1468,7 @@ public class ZoneRenderer implements Renderer {
 			if (requiredSize == 0) {
 				return;
 			}
+			ensureParticleBufferCapacity(requiredSize);
 
 			// Prepare buffer
 			particleBuffer.clear();
@@ -1455,8 +1496,12 @@ public class ZoneRenderer implements Renderer {
 				return;
 			}
 
-			// Instance count = bytes written / bytes per instance
-			int instanceCount = particleBuffer.position() / (PARTICLE_VERT_SIZE / 4);
+			int stride = PARTICLE_VERT_SIZE / Integer.BYTES;
+			alphaParticlePlugin = particlePlugin;
+			alphaParticleStart = 0;
+			alphaParticleEnd = rendered * stride;
+			drawAlphaParticlesDirect = false;
+
 			particleBuffer.flip();
 
 			// Upload to GPU
@@ -1486,37 +1531,133 @@ public class ZoneRenderer implements Renderer {
 			// Restore active texture unit — bindParticleTextures may leave it on a non-zero unit
 			glActiveTexture(GL_TEXTURE0);
 
-			// Disable face culling and depth writes; blend and depth test are already enabled by scenePass
-			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
-			glDisable(GL_CULL_FACE);
-			glDepthMask(false);
-
-			// Draw particles using instanced rendering
-			// Each particle is one instance; shader generates 6 vertices per quad using gl_VertexID
-			glBindVertexArray(particleVao);
-
-			// Set attribute divisors for instanced rendering (all attributes advance per instance)
-			glVertexAttribDivisor(0, 1);
-			glVertexAttribDivisor(1, 1);
-			glVertexAttribDivisor(2, 1);
-
-			// Draw: 6 vertices per instance (2 triangles = 1 quad), instanceCount instances
-			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instanceCount);
-
-			// Reset divisors for normal rendering
-			glVertexAttribDivisor(0, 0);
-			glVertexAttribDivisor(1, 0);
-			glVertexAttribDivisor(2, 0);
-
-			glBindVertexArray(0);
-
-			// Restore state changed for particle rendering
-			glDepthMask(true);
-			glEnable(GL_CULL_FACE);
+			sceneProgram.use();
+			addAlphaParticleBucketsFromPlugin(ctx, particlePlugin);
 
 		} catch (ReflectiveOperationException e) {
 			log.warn("Failed to render particles via reflection", e);
 			clearParticlePluginCache();
 		}
+	}
+
+	private void addAlphaParticleBucketsFromPlugin(WorldViewContext ctx, Plugin particlePlugin)
+		throws ReflectiveOperationException {
+		if (getAlphaParticleBucketSnapshotMethod == null) {
+			drawAlphaParticlesDirect = true;
+			return;
+		}
+
+		int[][] buckets = (int[][]) getAlphaParticleBucketSnapshotMethod.invoke(particlePlugin);
+		if (buckets == null || buckets.length < 6 || buckets[0].length < 2) {
+			drawAlphaParticlesDirect = true;
+			return;
+		}
+
+		int bucketCount = buckets[0][0];
+		drawAlphaParticlesDirect = buckets[0][1] != 0;
+		if (drawAlphaParticlesDirect) {
+			return;
+		}
+
+		int[] bucketStart = buckets[1];
+		int[] bucketEnd = buckets[2];
+		int[] bucketX = buckets[3];
+		int[] bucketY = buckets[4];
+		int[] bucketZ = buckets[5];
+		if (bucketStart.length < bucketCount || bucketEnd.length < bucketCount ||
+			bucketX.length < bucketCount || bucketY.length < bucketCount || bucketZ.length < bucketCount) {
+			drawAlphaParticlesDirect = true;
+			return;
+		}
+
+		final int offset = ctx.sceneContext.sceneOffset >> 3;
+		for (int i = 0; i < bucketCount; i++) {
+			int zoneX = bucketX[i] >> 10;
+			int zoneZ = bucketZ[i] >> 10;
+			int ctxX = zoneX + offset;
+			int ctxZ = zoneZ + offset;
+			if (ctxX < 0 || ctxX >= ctx.sizeX || ctxZ < 0 || ctxZ >= ctx.sizeZ)
+				continue;
+
+			ctx.zones[ctxX][ctxZ].addTempParticleModel(
+				particleVao,
+				alphaParticleStart + bucketStart[i],
+				alphaParticleStart + bucketEnd[i],
+				ctx.level,
+				bucketX[i] - (zoneX << 10),
+				bucketY[i],
+				bucketZ[i] - (zoneZ << 10)
+			);
+		}
+	}
+
+	private boolean beginParticleAlphaRender() {
+		if (alphaParticlePlugin == null || particleVao == 0 || !particleProgram.isValid())
+			return false;
+
+		particleProgram.use();
+		glActiveTexture(GL_TEXTURE0);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
+		glDisable(GL_CULL_FACE);
+		glDepthMask(false);
+
+		glBindVertexArray(particleVao);
+		glBindBuffer(GL_ARRAY_BUFFER, particleVbo);
+		glVertexAttribDivisor(0, 1);
+		glVertexAttribDivisor(1, 1);
+		glVertexAttribDivisor(2, 1);
+		return true;
+	}
+
+	private void drawParticleAlphaRange(int startpos, int endpos) {
+		if (startpos >= endpos)
+			return;
+
+		int stride = PARTICLE_VERT_SIZE / Integer.BYTES;
+		int instanceCount = (endpos - startpos) / stride;
+		long byteOffset = (long) startpos * Integer.BYTES;
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, PARTICLE_VERT_SIZE, byteOffset);
+		glVertexAttribIPointer(1, 1, GL_INT, PARTICLE_VERT_SIZE, byteOffset + 12);
+		glVertexAttribIPointer(2, 4, GL_SHORT, PARTICLE_VERT_SIZE, byteOffset + 16);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instanceCount);
+	}
+
+	private void endParticleAlphaRender(boolean restoreDepthMask) {
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glVertexAttribDivisor(0, 0);
+		glVertexAttribDivisor(1, 0);
+		glVertexAttribDivisor(2, 0);
+		glBindVertexArray(0);
+
+		if (restoreDepthMask)
+			glDepthMask(true);
+		glEnable(GL_CULL_FACE);
+		sceneProgram.use();
+		glActiveTexture(GL_TEXTURE0);
+	}
+
+	private void renderParticleAlphaRange(int startpos, int endpos, boolean restoreDepthMask) {
+		if (startpos >= endpos || !beginParticleAlphaRender())
+			return;
+
+		drawParticleAlphaRange(startpos, endpos);
+		endParticleAlphaRender(restoreDepthMask);
+	}
+
+	private void renderParticleAlphaRanges(CommandBuffer cmd, int[] startpos, int[] endpos, int count) {
+		if (count <= 0)
+			return;
+
+		int[] starts = Arrays.copyOf(startpos, count);
+		int[] ends = Arrays.copyOf(endpos, count);
+		cmd.Callback(() -> {
+			if (!beginParticleAlphaRender())
+				return;
+
+			for (int i = 0; i < count; i++)
+				drawParticleAlphaRange(starts[i], ends[i]);
+			endParticleAlphaRender(false);
+		});
 	}
 }
