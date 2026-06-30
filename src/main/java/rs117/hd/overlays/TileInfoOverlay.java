@@ -626,10 +626,10 @@ public class TileInfoOverlay extends Overlay implements MouseListener, MouseWhee
 				lines.add(String.format(
 					"Decor Object 2: %s preori=%d ori=%d offset=[%d, %d] type=%s %s",
 					getIdAndImpostorId(decorObject, decorObject.getRenderable2()),
-					HDUtils.getModelPreOrientation(config),
+					(HDUtils.getModelPreOrientation(config) + 1024) % 2048,
 					HDUtils.getModelOrientation(config),
-					decorObject.getXOffset(),
-					decorObject.getYOffset(),
+					decorObject.getXOffset2(),
+					decorObject.getYOffset2(),
 					ObjectType.fromConfig(config),
 					getModelInfo(decorObject.getRenderable2())
 				));
@@ -1059,10 +1059,10 @@ public class TileInfoOverlay extends Overlay implements MouseListener, MouseWhee
 		z -= client.getCameraZ();
 		int cameraPitch = client.getCameraPitch();
 		int cameraYaw = client.getCameraYaw();
-		float pitchSin = sin(cameraPitch * JAU_TO_RAD);
-		float pitchCos = cos(cameraPitch * JAU_TO_RAD);
-		float yawSin = sin(cameraYaw * JAU_TO_RAD);
-		float yawCos = cos(cameraYaw * JAU_TO_RAD);
+		float pitchSin = sin(cameraPitch * JAU_TO_RAD_FINE);
+		float pitchCos = cos(cameraPitch * JAU_TO_RAD_FINE);
+		float yawSin = sin(cameraYaw * JAU_TO_RAD_FINE);
+		float yawCos = cos(cameraYaw * JAU_TO_RAD_FINE);
 		float x1 = x * yawCos + y * yawSin;
 		float y1 = y * yawCos - x * yawSin;
 		float y2 = z * pitchCos - y1 * pitchSin;
