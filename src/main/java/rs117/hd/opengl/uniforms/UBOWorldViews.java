@@ -30,6 +30,7 @@ public class UBOWorldViews extends UniformBuffer<GLBuffer> {
 
 		@Getter
 		private boolean squashed;
+		private boolean forceIdentityProjection;
 
 		private final float[] currentProjection = Mat4.zero();
 		private final int[] currentTint = new int[4];
@@ -37,7 +38,8 @@ public class UBOWorldViews extends UniformBuffer<GLBuffer> {
 
 		public void update() {
 			float[] newProjection = IDENTITY_MATRIX;
-			final Projection worldViewProjection = worldView.getMainWorldProjection();
+			squashed = false;
+			final Projection worldViewProjection = forceIdentityProjection ? null : worldView.getMainWorldProjection();
 			if (worldViewProjection instanceof FloatProjection) {
 				newProjection = ((FloatProjection) worldViewProjection).getProjection();
 				squashed = newProjection[5] < 0.1f;
@@ -62,6 +64,11 @@ public class UBOWorldViews extends UniformBuffer<GLBuffer> {
 			}
 		}
 
+		public void useIdentityProjection() {
+			forceIdentityProjection = true;
+			update();
+		}
+
 		public void project(float[] out) {
 			Mat4.mulVec(out, currentProjection, out);
 		}
@@ -69,6 +76,7 @@ public class UBOWorldViews extends UniformBuffer<GLBuffer> {
 		public synchronized void free() {
 			freeIndices.add(worldViewIdx);
 			worldView = null;
+			forceIdentityProjection = false;
 		}
 	}
 

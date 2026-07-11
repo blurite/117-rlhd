@@ -159,9 +159,16 @@ public class ModelStreamingManager {
 		WorldViewContext root = sceneManager.getRoot();
 		WorldViewContext ctx = sceneManager.getContext(scene);
 		if (root == null || ctx == null ||
-			!sceneManager.isRoot(ctx) && ctx.isLoading ||
+			!renderer.isFrameRoot(ctx) && ctx.isLoading ||
 			!renderCallbackManager.drawObject(scene, tileObject))
 			return;
+
+		if (projection == null) {
+			WorldView worldView = client.getWorldView(scene.getWorldViewId());
+			if (worldView == null || worldView.getCanvasProjection() == null)
+				return;
+			projection = worldView.getCanvasProjection();
+		}
 
 		int offset = ctx.sceneContext.sceneOffset >> 3;
 		int zx = (x >> 10) + offset;
@@ -179,7 +186,10 @@ public class ModelStreamingManager {
 		final int uuid;
 		if (r instanceof DynamicObject) {
 			int id = tileObject.getId();
-			int impostorId = root.sceneContext.animatedDynamicObjectImpostors.getOrDefault(id, id);
+			var animationSceneContext = renderer.isFrameRoot(ctx) ? ctx.sceneContext : root.sceneContext;
+			if (animationSceneContext == null)
+				return;
+			int impostorId = animationSceneContext.animatedDynamicObjectImpostors.getOrDefault(id, id);
 			uuid = ModelHash.packUuid(ModelHash.getType(tileObject.getHash()), impostorId);
 
 			// Cull dynamic models based on detail draw distance
@@ -332,8 +342,9 @@ public class ModelStreamingManager {
 
 		boolean isActor = renderable instanceof Actor;
 		boolean isPlayer = renderable instanceof Player;
+		boolean isLoginNpc = renderer.isLoginScreenContext(ctx) && renderable instanceof NPC;
 		final int renderMode = renderable.getRenderMode();
-		boolean shouldSort =
+		boolean shouldSort = !isLoginNpc && (
 			m.getTransparency() != 0 ||
 			m.getFaceTransparencies() != null ||
 			modelOverride.mightHaveTransparency ||
@@ -342,7 +353,8 @@ public class ModelStreamingManager {
 				renderMode != Renderable.RENDERMODE_UNSORTED &&
 				renderMode != Renderable.RENDERMODE_DEFAULT &&
 				renderMode != Renderable.RENDERMODE_UNSORTED_NO_DEPTH
-			);
+			)
+		);
 
 		try (
 			SceneUploader sceneUploader = SceneUploader.POOL.acquire();
@@ -356,6 +368,7 @@ public class ModelStreamingManager {
 				visibleFaces,
 				culledFaces,
 				isModelPartiallyVisible,
+				!isLoginNpc,
 				modelOverride,
 				m,
 				isPlayer,

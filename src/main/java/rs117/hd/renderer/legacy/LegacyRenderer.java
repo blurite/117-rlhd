@@ -175,6 +175,9 @@ public class LegacyRenderer implements Renderer {
 	@Nullable
 	private LegacySceneContext sceneContext;
 	private LegacySceneContext nextSceneContext;
+	private Scene loginScreenScene;
+	private int loginScreenWorldViewId = -1;
+	private boolean loginScreenSceneFbo;
 	private int gameTicksUntilSceneReload;
 
 	private UBOCompute uboCompute;
@@ -513,8 +516,38 @@ public class LegacyRenderer implements Renderer {
 		texTileHeightMap = 0;
 	}
 
+	// Blurite adds these callbacks to DrawCallbacks; upstream RuneLite is still the compile-time API here.
+	public boolean beginLoginScreenScene(
+		Scene scene,
+		float cameraX, float cameraY, float cameraZ, float cameraPitch, float cameraYaw
+	) {
+		plugin.updateSceneFbo();
+		if (sceneContext == null || sceneContext.scene != scene || plugin.sceneViewport == null)
+			return false;
+
+		loginScreenScene = scene;
+		loginScreenWorldViewId = scene.getWorldViewId();
+		drawScene(scene, cameraX, cameraY, cameraZ, cameraPitch, cameraYaw);
+		return true;
+	}
+
+	public void endLoginScreenScene(Scene scene) {
+		if (loginScreenScene != scene)
+			return;
+
+		postDrawScene();
+		loginScreenSceneFbo = true;
+		loginScreenScene = null;
+	}
+
 	@Override
 	public void drawScene(double cameraX, double cameraY, double cameraZ, double cameraPitch, double cameraYaw, int plane) {
+		WorldView worldView = client.getTopLevelWorldView();
+		if (worldView != null)
+			drawScene(worldView.getScene(), cameraX, cameraY, cameraZ, cameraPitch, cameraYaw);
+	}
+
+	private void drawScene(Scene scene, double cameraX, double cameraY, double cameraZ, double cameraPitch, double cameraYaw) {
 		plugin.updateSceneFbo();
 
 		if (sceneContext == null || plugin.sceneViewport == null)
@@ -522,8 +555,6 @@ public class LegacyRenderer implements Renderer {
 
 		frameTimer.begin(Timer.DRAW_FRAME);
 		frameTimer.begin(Timer.DRAW_SCENE);
-
-		final Scene scene = client.getTopLevelWorldView().getScene();
 		int drawDistance = plugin.getDrawDistance();
 		boolean drawDistanceChanged = false;
 		if (scene.getDrawDistance() != drawDistance) {
@@ -533,7 +564,7 @@ public class LegacyRenderer implements Renderer {
 
 		boolean updateUniforms = true;
 
-		Player localPlayer = client.getLocalPlayer();
+		Player localPlayer = scene == loginScreenScene ? null : client.getLocalPlayer();
 		if (sceneContext.enableAreaHiding && localPlayer != null) {
 			var lp = localPlayer.getLocalLocation();
 			assert sceneContext.sceneBase != null;
@@ -620,8 +651,13 @@ public class LegacyRenderer implements Renderer {
 				}
 
 				if (sceneContext.scene == scene) {
-					plugin.cameraFocalPoint[0] = (int) client.getCameraFocalPointX();
-					plugin.cameraFocalPoint[1] = (int) client.getCameraFocalPointZ();
+					if (scene == loginScreenScene) {
+						plugin.cameraFocalPoint[0] = (int) cameraX;
+						plugin.cameraFocalPoint[1] = (int) cameraZ;
+					} else {
+						plugin.cameraFocalPoint[0] = (int) client.getCameraFocalPointX();
+						plugin.cameraFocalPoint[1] = (int) client.getCameraFocalPointZ();
+					}
 					Arrays.fill(plugin.cameraShift, 0);
 				} else {
 					plugin.cameraShift[0] = plugin.cameraFocalPoint[0] - (int) client.getCameraFocalPointX();
@@ -685,7 +721,7 @@ public class LegacyRenderer implements Renderer {
 				if (sceneContext.scene == scene) {
 					try {
 						frameTimer.begin(Timer.UPDATE_ENVIRONMENT);
-						environmentManager.update(sceneContext);
+						environmentManager.update(sceneContext, plugin.cameraFocalPoint[0], plugin.cameraFocalPoint[1], getScenePlane(scene));
 						frameTimer.end(Timer.UPDATE_ENVIRONMENT);
 
 						frameTimer.begin(Timer.UPDATE_LIGHTS);
@@ -980,7 +1016,7 @@ public class LegacyRenderer implements Renderer {
 			plugin.hasLoggedIn = true;
 
 		// Draw 3d scene
-		if (plugin.hasLoggedIn && sceneContext != null && plugin.sceneViewport != null) {
+		if ((plugin.hasLoggedIn || loginScreenSceneFbo) && sceneContext != null && plugin.sceneViewport != null) {
 			// Before reading the SSBOs written to from postDrawScene() we must insert a barrier
 			if (computeMode == ComputeMode.OPENCL) {
 				clManager.finish();
@@ -1274,6 +1310,25 @@ public class LegacyRenderer implements Renderer {
 		checkGLErrors();
 	}
 
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged event) {
+		if (!isLoginScreenState(event.getGameState()))
+			loginScreenSceneFbo = false;
+	}
+
+	private int getScenePlane(Scene scene) {
+		if (scene == loginScreenScene) {
+			WorldView worldView = client.getWorldView(scene.getWorldViewId());
+			if (worldView != null)
+				return worldView.getPlane();
+		}
+		return client.getPlane();
+	}
+
+	private static boolean isLoginScreenState(GameState state) {
+		return state == GameState.LOGIN_SCREEN || state == GameState.LOGIN_SCREEN_AUTHENTICATOR;
+	}
+
 	@Override
 	public void reloadScene() {
 		assert client.isClientThread() : "Loading a scene is unsafe while the client can modify it";
@@ -1285,6 +1340,12 @@ public class LegacyRenderer implements Renderer {
 		if (plugin.skipScene == scene)
 			plugin.skipScene = null;
 		swapScene(scene);
+	}
+
+	@Override
+	public void loadScene(WorldView worldView, Scene scene) {
+		if (isLoginScreenState(client.getGameState()))
+			loadScene(scene);
 	}
 
 	@Override
@@ -1347,6 +1408,28 @@ public class LegacyRenderer implements Renderer {
 		} catch (Throwable ex) {
 			log.error("Error while loading scene:", ex);
 			plugin.stopPlugin();
+		}
+	}
+
+	@Override
+	public synchronized void despawnWorldView(WorldView worldView) {
+		int worldViewId = worldView.getId();
+		boolean ownsWorldView = worldViewId == loginScreenWorldViewId ||
+			nextSceneContext != null && nextSceneContext.scene.getWorldViewId() == worldViewId ||
+			sceneContext != null && sceneContext.scene.getWorldViewId() == worldViewId;
+		if (!ownsWorldView)
+			return;
+
+		loginScreenScene = null;
+		loginScreenWorldViewId = -1;
+		loginScreenSceneFbo = false;
+		if (nextSceneContext != null && nextSceneContext.scene.getWorldViewId() == worldViewId) {
+			nextSceneContext.destroy();
+			nextSceneContext = null;
+		}
+		if (sceneContext != null && sceneContext.scene.getWorldViewId() == worldViewId) {
+			sceneContext.destroy();
+			sceneContext = null;
 		}
 	}
 

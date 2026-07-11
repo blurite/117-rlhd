@@ -233,13 +233,13 @@ public class EnvironmentManager {
 	 * @param sceneContext to possible environments from
 	 */
 	public void update(SceneContext sceneContext) {
+		update(sceneContext, plugin.cameraFocalPoint[0], plugin.cameraFocalPoint[1], client.getPlane());
+	}
+
+	public void update(SceneContext sceneContext, int focalPointX, int focalPointY, int plane) {
 		assert client.isClientThread();
 
-		int[] focalPoint = sceneContext.localToWorld(
-			plugin.cameraFocalPoint[0],
-			plugin.cameraFocalPoint[1],
-			client.getPlane()
-		);
+		int[] focalPoint = sceneContext.localToWorld(focalPointX, focalPointY, plane);
 
 		// skip the transitional fade if the player has moved too far
 		// since the previous frame. results in an instant transition when

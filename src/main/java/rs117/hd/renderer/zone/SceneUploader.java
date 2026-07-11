@@ -1762,6 +1762,7 @@ public class SceneUploader implements AutoCloseable {
 		PrimitiveCharArray visibleFaces,
 		PrimitiveCharArray culledFaces,
 		boolean isModelPartiallyVisible,
+		boolean cullFaces,
 		ModelOverride modelOverride,
 		Model model,
 		boolean sortAllFaces,
@@ -1962,7 +1963,7 @@ public class SceneUploader implements AutoCloseable {
 			final float cY = modelProjected[offsetC + 1];
 
 			// back face culling
-			if ((aX - bX) * (cY - bY) - (cX - bX) * (aY - bY) <= 0) {
+			if (cullFaces && (aX - bX) * (cY - bY) - (cX - bX) * (aY - bY) <= 0) {
 				culledFaces.put(f);
 				continue;
 			}

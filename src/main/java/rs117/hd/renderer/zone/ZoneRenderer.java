@@ -177,6 +177,9 @@ public class ZoneRenderer implements Renderer {
 	private boolean shouldRenderScene;
 	private boolean shouldClearShadowFbo;
 	private boolean shouldDrawRoofShadows;
+	private volatile Scene loginScreenScene;
+	private volatile int loginScreenWorldViewId = -1;
+	private boolean loginScreenSceneFbo;
 
 	// Particle plugin reflection cache
 	private Plugin cachedParticlePlugin;
@@ -323,6 +326,70 @@ public class ZoneRenderer implements Renderer {
 			modelStreamingManager.reinitialize();
 	}
 
+	boolean isFrameRoot(WorldViewContext context) {
+		return sceneManager.isRoot(context) || isLoginScreenContext(context);
+	}
+
+	boolean isLoginScreenContext(WorldViewContext context) {
+		return context.worldViewId == loginScreenWorldViewId;
+	}
+
+	private WorldViewContext getFrameRootContext() {
+		return loginScreenScene == null ? sceneManager.getRoot() : sceneManager.getContext(loginScreenScene);
+	}
+
+	// Blurite adds these callbacks to DrawCallbacks; upstream RuneLite is still the compile-time API here.
+	public boolean beginLoginScreenScene(
+		Scene scene,
+		float cameraX, float cameraY, float cameraZ, float cameraPitch, float cameraYaw
+	) {
+		if (plugin.isPluginStopPending())
+			return false;
+
+		plugin.updateSceneFbo();
+		if (plugin.sceneViewport == null)
+			return false;
+
+		try {
+			WorldViewContext ctx = sceneManager.getContext(scene);
+			if (ctx == null || ctx.isLoading)
+				return false;
+
+			// Ordinary sub-scenes inherit the top-level environment, so SceneManager does not
+			// populate this list for them. The login scene is rendered as the frame root and
+			// therefore needs its own environment selection.
+			if (ctx.sceneContext.environments.isEmpty())
+				environmentManager.loadSceneEnvironments(ctx.sceneContext);
+
+			loginScreenScene = scene;
+			loginScreenWorldViewId = scene.getWorldViewId();
+			if (ctx.uboWorldViewStruct != null)
+				ctx.uboWorldViewStruct.useIdentityProjection();
+			preSceneDrawTopLevel(scene, cameraX, cameraY, cameraZ, cameraPitch, cameraYaw);
+			return true;
+		} catch (Throwable ex) {
+			loginScreenScene = null;
+			log.error("Error beginning login screen scene:", ex);
+			plugin.requestPluginStop();
+			return false;
+		}
+	}
+
+	public void endLoginScreenScene(Scene scene) {
+		if (loginScreenScene != scene)
+			return;
+
+		try {
+			postDrawTopLevel(scene);
+			loginScreenSceneFbo = true;
+		} catch (Throwable ex) {
+			log.error("Error ending login screen scene:", ex);
+			plugin.requestPluginStop();
+		} finally {
+			loginScreenScene = null;
+		}
+	}
+
 	@Override
 	public void preSceneDraw(
 		Scene scene,
@@ -334,7 +401,7 @@ public class ZoneRenderer implements Renderer {
 
 		try {
 			WorldViewContext ctx = sceneManager.getContext(scene);
-			if (ctx == null || !sceneManager.isRoot(ctx) && ctx.isLoading) {
+			if (ctx == null || !isFrameRoot(ctx) && ctx.isLoading) {
 				// When triggering plugin restarts in rapid succession, it can end up in a state where no scene is loaded initially
 				if (scene.getWorldViewId() == WorldView.TOPLEVEL && client.getGameState() == GameState.LOGGED_IN)
 					clientThread.invokeLater(() -> client.setGameState(GameState.LOADING));
@@ -366,7 +433,7 @@ public class ZoneRenderer implements Renderer {
 
 			ctx.map();
 
-			if (scene.getWorldViewId() == WorldView.TOPLEVEL) {
+			if (isFrameRoot(ctx)) {
 				Model skybox = scene.getSkybox();
 				if (skybox != null) {
 					skybox.calculateBoundsCylinder();
@@ -414,10 +481,9 @@ public class ZoneRenderer implements Renderer {
 
 		plugin.updateSceneFbo();
 
-		if (!sceneManager.isTopLevelValid() || plugin.sceneViewport == null)
-			return;
-
 		WorldViewContext ctx = sceneManager.getContext(scene);
+		if (ctx == null || ctx.isLoading || plugin.sceneViewport == null)
+			return;
 
 		frameTimer.begin(Timer.DRAW_FRAME);
 		frameTimer.begin(Timer.DRAW_SCENE);
@@ -429,7 +495,10 @@ public class ZoneRenderer implements Renderer {
 			copyTo(plugin.cameraPosition, vec(cameraX, cameraY, cameraZ));
 			copyTo(plugin.cameraOrientation, vec(cameraYaw, cameraPitch));
 
-			copyTo(plugin.cameraFocalPoint, ivec((int) client.getCameraFocalPointX(), (int) client.getCameraFocalPointZ()));
+			if (scene == loginScreenScene)
+				copyTo(plugin.cameraFocalPoint, ivec((int) cameraX, (int) cameraZ));
+			else
+				copyTo(plugin.cameraFocalPoint, ivec((int) client.getCameraFocalPointX(), (int) client.getCameraFocalPointZ()));
 			Arrays.fill(plugin.cameraShift, 0);
 
 			float zoom = client.get3dZoom();
@@ -458,16 +527,18 @@ public class ZoneRenderer implements Renderer {
 
 			try {
 				frameTimer.begin(Timer.UPDATE_ENVIRONMENT);
-				environmentManager.update(ctx.sceneContext);
+				environmentManager.update(ctx.sceneContext, plugin.cameraFocalPoint[0], plugin.cameraFocalPoint[1], getScenePlane(scene));
 				frameTimer.end(Timer.UPDATE_ENVIRONMENT);
 
 				frameTimer.begin(Timer.UPDATE_LIGHTS);
 				lightManager.update(ctx.sceneContext, plugin.cameraShift, plugin.cameraFrustum);
 				frameTimer.end(Timer.UPDATE_LIGHTS);
 
-				frameTimer.begin(Timer.UPDATE_SCENE);
-				sceneManager.update();
-				frameTimer.end(Timer.UPDATE_SCENE);
+				if (scene.getWorldViewId() == WorldView.TOPLEVEL) {
+					frameTimer.begin(Timer.UPDATE_SCENE);
+					sceneManager.update();
+					frameTimer.end(Timer.UPDATE_SCENE);
+				}
 			} catch (Exception ex) {
 				log.error("Error while updating environment or lights:", ex);
 				plugin.requestPluginStop();
@@ -710,12 +781,12 @@ public class ZoneRenderer implements Renderer {
 			jobSystem.processPendingClientCallbacks();
 
 			WorldViewContext ctx = sceneManager.getContext(scene);
-			if (ctx == null || !sceneManager.isRoot(ctx) && ctx.isLoading)
+			if (ctx == null || !isFrameRoot(ctx) && ctx.isLoading)
 				return;
 
 			frameTimer.begin(Timer.DRAW_POSTSCENE);
 			if (scene.getWorldViewId() == WorldView.TOPLEVEL)
-				postDrawTopLevel();
+				postDrawTopLevel(scene);
 			frameTimer.end(Timer.DRAW_POSTSCENE);
 		} catch (Throwable ex) {
 			log.error("Error in postSceneDraw({}):", scene != null ? scene.getWorldViewId() : null, ex);
@@ -723,8 +794,9 @@ public class ZoneRenderer implements Renderer {
 		}
 	}
 
-	private void postDrawTopLevel() {
-		if (!sceneManager.isTopLevelValid() || plugin.sceneViewport == null)
+	private void postDrawTopLevel(Scene scene) {
+		WorldViewContext ctx = sceneManager.getContext(scene);
+		if (ctx == null || ctx.isLoading || plugin.sceneViewport == null)
 			return;
 
 		sceneFboValid = true;
@@ -892,10 +964,14 @@ public class ZoneRenderer implements Renderer {
 			return false;
 
 		try {
-			if (!sceneManager.isTopLevelValid())
+			WorldViewContext ctx = getFrameRootContext();
+			if (ctx == null || ctx.isLoading)
 				return false;
 
-			WorldViewContext ctx = sceneManager.getRoot();
+			// Login scenes use the client's sub-scene traversal rather than the expanded
+			// top-level zone culler. If this callback is requested, do not reject its zones.
+			if (loginScreenScene != null)
+				return true;
 			if (plugin.enableDetailedTimers) frameTimer.begin(Timer.VISIBILITY_CHECK);
 			int minX = zx * CHUNK_SIZE - ctx.sceneContext.sceneOffset;
 			int minZ = zz * CHUNK_SIZE - ctx.sceneContext.sceneOffset;
@@ -964,7 +1040,7 @@ public class ZoneRenderer implements Renderer {
 
 		try {
 			WorldViewContext ctx = sceneManager.getContext(scene);
-			if (ctx == null || !sceneManager.isRoot(ctx) && ctx.isLoading)
+			if (ctx == null || !isFrameRoot(ctx) && ctx.isLoading)
 				return;
 
 			Zone z = ctx.zones[zx][zz];
@@ -1000,7 +1076,7 @@ public class ZoneRenderer implements Renderer {
 
 		try {
 			final WorldViewContext ctx = sceneManager.getContext(scene);
-			if (ctx == null || !sceneManager.isRoot(ctx) && ctx.isLoading)
+			if (ctx == null || !isFrameRoot(ctx) && ctx.isLoading)
 				return;
 
 			final Zone z = ctx.zones[zx][zz];
@@ -1046,7 +1122,7 @@ public class ZoneRenderer implements Renderer {
 
 		try {
 			WorldViewContext ctx = sceneManager.getContext(scene);
-			if (ctx == null || !sceneManager.isRoot(ctx) && ctx.isLoading)
+			if (ctx == null || !isFrameRoot(ctx) && ctx.isLoading)
 				return;
 
 			frameTimer.begin(Timer.DRAW_PASS);
@@ -1057,7 +1133,7 @@ public class ZoneRenderer implements Renderer {
 					directionalCmd.ExecuteSubCommandBuffer(ctx.vaoDirectionalCmd);
 
 					sceneCmd.ExecuteSubCommandBuffer(ctx.vaoSceneCmd);
-					if (sceneManager.isRoot(ctx)) {
+					if (isFrameRoot(ctx)) {
 						clearAlphaParticleState();
 						prepareParticlesForAlpha(ctx);
 					}
@@ -1065,12 +1141,12 @@ public class ZoneRenderer implements Renderer {
 				case DrawCallbacks.PASS_ALPHA:
 					modelStreamingManager.ensureAsyncUploadsComplete(null);
 
-					if (sceneManager.isRoot(ctx))
+					if (isFrameRoot(ctx))
 						frameTimer.begin(Timer.UNMAP_ROOT_CTX);
 
 					ctx.unmap();
 
-					if (sceneManager.isRoot(ctx))
+					if (isFrameRoot(ctx))
 						frameTimer.end(Timer.UNMAP_ROOT_CTX);
 
 					// Draw opaque
@@ -1246,7 +1322,9 @@ public class ZoneRenderer implements Renderer {
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged) {
 		GameState state = gameStateChanged.getGameState();
-		if (state.getState() < GameState.LOADING.getState()) {
+		if (!isLoginScreenState(state))
+			loginScreenSceneFbo = false;
+		if (state.getState() < GameState.LOADING.getState() && !loginScreenSceneFbo) {
 			// this is to avoid scene fbo blit when going from <loading to >=loading,
 			// but keep it when doing >loading to loading
 			sceneFboValid = false;
@@ -1256,6 +1334,19 @@ public class ZoneRenderer implements Renderer {
 			// This ensures texture IDs stay in sync if the particle plugin recreates its manager
 			particleTexturesInitialized = false;
 		}
+	}
+
+	private int getScenePlane(Scene scene) {
+		if (scene == loginScreenScene) {
+			WorldView worldView = client.getWorldView(scene.getWorldViewId());
+			if (worldView != null)
+				return worldView.getPlane();
+		}
+		return client.getPlane();
+	}
+
+	private static boolean isLoginScreenState(GameState state) {
+		return state == GameState.LOGIN_SCREEN || state == GameState.LOGIN_SCREEN_AUTHENTICATOR;
 	}
 
 	@Override
@@ -1302,6 +1393,12 @@ public class ZoneRenderer implements Renderer {
 	@Override
 	public void despawnWorldView(WorldView worldView) {
 		try {
+			if (worldView.getId() == loginScreenWorldViewId) {
+				loginScreenScene = null;
+				loginScreenWorldViewId = -1;
+				loginScreenSceneFbo = false;
+				sceneFboValid = false;
+			}
 			sceneManager.despawnWorldView(worldView);
 		} catch (Throwable ex) {
 			log.error("Error in despawnWorldView({}):", worldView.getId(), ex);
