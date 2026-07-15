@@ -1326,7 +1326,9 @@ public class LegacyRenderer implements Renderer {
 	}
 
 	private static boolean isLoginScreenState(GameState state) {
-		return state == GameState.LOGIN_SCREEN || state == GameState.LOGIN_SCREEN_AUTHENTICATOR;
+		return state == GameState.LOGIN_SCREEN
+			|| state == GameState.LOGIN_SCREEN_AUTHENTICATOR
+			|| state == GameState.LOGGING_IN;
 	}
 
 	@Override
