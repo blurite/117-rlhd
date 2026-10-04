@@ -32,6 +32,7 @@ public final class MathUtils {
 
 	public static final float EPSILON = 1.1920929e-7f; // Float epsilon from JOGL
 	public static final float MAX_FLOAT_WITH_128TH_PRECISION = 1 << 16;
+	public static final float MAX_FLOAT16 = 65504;
 
 	public static final float E = (float) Math.E;
 
@@ -43,7 +44,11 @@ public final class MathUtils {
 	public static final float DEG_TO_RAD = TWO_PI / 360;
 	public static final float RAD_TO_DEG = 1 / DEG_TO_RAD;
 	public static final float JAU_TO_RAD = TWO_PI / 2048;
-	public static final float JAU_TO_RAD_FINE = TWO_PI / 16384;
+	public static final float RAD_TO_JAU = 1 / JAU_TO_RAD;
+	public static final float JAU_FINE_TO_RAD = TWO_PI / 16384;
+	public static final float RAD_TO_JAU_FINE = 1 / JAU_FINE_TO_RAD;
+	public static final float JAU_TO_DEG = JAU_TO_RAD * RAD_TO_DEG;
+	public static final float DEG_TO_JAU = 1 / JAU_TO_DEG;
 
 	public static float[] vec(float... vec) {
 		return vec;

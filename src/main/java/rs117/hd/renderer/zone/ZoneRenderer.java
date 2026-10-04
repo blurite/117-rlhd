@@ -80,10 +80,11 @@ import rs117.hd.utils.jobs.JobSystem;
 import static net.runelite.api.Constants.*;
 import static net.runelite.api.Perspective.*;
 import static org.lwjgl.opengl.GL33C.*;
-import static org.lwjgl.opengl.GL40.GL_DRAW_INDIRECT_BUFFER;
+import static rs117.hd.HdPlugin.APPLE;
 import static rs117.hd.HdPlugin.COLOR_FILTER_FADE_DURATION;
 import static rs117.hd.HdPlugin.NEAR_PLANE;
 import static rs117.hd.HdPlugin.ORTHOGRAPHIC_ZOOM;
+import static rs117.hd.HdPlugin.SUPPORTS_INDIRECT_DRAW;
 import static rs117.hd.HdPlugin.checkGLErrors;
 import static rs117.hd.HdPluginConfig.*;
 import static rs117.hd.renderer.zone.WorldViewContext.VAO_OPAQUE;
@@ -294,8 +295,10 @@ public class ZoneRenderer implements Renderer {
 		eboAlpha.initialize(MiB);
 		eboAlphaWriter = new GLMappedBufferIntWriter(eboAlpha);
 
-		indirectDrawCmds = new GLBuffer("indirectDrawCmds", GL_DRAW_INDIRECT_BUFFER, GL_STREAM_DRAW).initialize(MiB);
-		indirectDrawCmdsStaging = new GpuIntBuffer();
+		if (SUPPORTS_INDIRECT_DRAW) {
+			indirectDrawCmds = new GLBuffer("indirectDrawCmds", GL40.GL_DRAW_INDIRECT_BUFFER, GL_STREAM_DRAW).initialize(MiB);
+			indirectDrawCmdsStaging = new GpuIntBuffer();
+		}
 
 		initializeParticleRendering();
 	}
@@ -760,7 +763,8 @@ public class ZoneRenderer implements Renderer {
 		plugin.uboGlobal.upload();
 
 		// Reset buffers for the next frame
-		indirectDrawCmdsStaging.clear();
+		if (SUPPORTS_INDIRECT_DRAW)
+			indirectDrawCmdsStaging.clear();
 		sceneCmd.reset();
 		directionalCmd.reset();
 		gapFillerCmd.reset();
@@ -808,7 +812,7 @@ public class ZoneRenderer implements Renderer {
 			eboAlphaWriter.flush();
 
 		// Scene draw state to apply before all recorded commands
-		if (indirectDrawCmdsStaging.position() > 0) {
+		if (SUPPORTS_INDIRECT_DRAW && indirectDrawCmdsStaging.position() > 0) {
 			indirectDrawCmdsStaging.flip();
 			indirectDrawCmds.orphan();
 			indirectDrawCmds.upload(indirectDrawCmdsStaging);
@@ -883,11 +887,9 @@ public class ZoneRenderer implements Renderer {
 		renderState.enable.set(GL_DEPTH_TEST);
 		renderState.disable.set(GL_CULL_FACE);
 		renderState.depthFunc.set(GL_LEQUAL);
-		renderState.ido.set(indirectDrawCmds.id);
-
-		CommandBuffer.SKIP_DEPTH_MASKING = true;
+		if (SUPPORTS_INDIRECT_DRAW)
+			renderState.ido.set(indirectDrawCmds.id);
 		directionalCmd.execute(renderState);
-		CommandBuffer.SKIP_DEPTH_MASKING = false;
 
 		glBindVertexArray(0);
 
@@ -908,7 +910,8 @@ public class ZoneRenderer implements Renderer {
 			renderState.disable.set(GL_MULTISAMPLE);
 		}
 		renderState.viewport.set(0, 0, plugin.sceneResolution[0], plugin.sceneResolution[1]);
-		renderState.ido.set(indirectDrawCmds.id);
+		if (SUPPORTS_INDIRECT_DRAW)
+			renderState.ido.set(indirectDrawCmds.id);
 		renderState.apply();
 
 		// Clear scene
@@ -1103,8 +1106,32 @@ public class ZoneRenderer implements Renderer {
 					z.renderAlpha(directionalCmd, zx - offset, zz - offset, level, ctx, true, shouldDrawRoofShadows, null);
 				}
 
-				if (!sceneManager.isRoot(ctx) || z.inSceneFrustum)
-					z.renderAlpha(sceneCmd, zx - offset, zz - offset, level, ctx, false, false, this::renderParticleAlphaRanges);
+				if (!sceneManager.isRoot(ctx) || z.inSceneFrustum) {
+					if (renderWater) {
+						// Water is currently drawn with depth writes & depth testing enabled, and as such, alpha models and the water plane
+						// can Z-fight depending on draw order. To avoid alpha models above water causing the water surface to fail its
+						// depth test, we disable depth writes for alpha models and rely on correct back to front ordering of the zones
+						sceneCmd.DepthMask(false);
+						z.renderAlpha(sceneCmd, zx - offset, zz - offset, level, ctx, false, false, this::renderParticleAlphaRanges);
+						sceneCmd.DepthMask(true);
+					} else {
+						// Draw alpha models in two passes, first blending colors correctly, then writing depth for subsequent opaque models
+						// to test against. This is necessary because opaque models on higher planes can be drawn later
+
+						// Write color without depth writes
+						sceneCmd.DepthMask(false);
+						sceneCmd.ColorMask(true, true, true, true);
+						z.renderAlpha(sceneCmd, zx - offset, zz - offset, level, ctx, false, false, this::renderParticleAlphaRanges);
+
+						// Write depth without color
+						sceneCmd.DepthMask(true);
+						sceneCmd.ColorMask(false, false, false, false);
+						z.renderAlpha(sceneCmd, zx - offset, zz - offset, level, ctx, true, false, null);
+
+						// Restore color writes
+						sceneCmd.ColorMask(true, true, true, true);
+					}
+				}
 			}
 			frameTimer.end(Timer.DRAW_ZONE_ALPHA);
 
@@ -1266,6 +1293,15 @@ public class ZoneRenderer implements Renderer {
 
 				// Blit from the resolved FBO to the default FBO
 				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, plugin.awtContext.getFramebuffer(false));
+
+				if (APPLE && !client.isResized()) {
+					// On macOS, we need to ensure that the alpha channel is opaque to prevent whatever
+					// is beneath from leaking through. In fixed mode, the MSAA resolve alone is not
+					// sufficient, since the viewport only covers part of the screen.
+					glClearColor(0, 0, 0, 1);
+					glClear(GL_COLOR_BUFFER_BIT);
+				}
+
 				glBlitFramebuffer(
 					0,
 					0,
