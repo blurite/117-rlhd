@@ -1,14 +1,16 @@
 package rs117.hd.opengl.shader;
 
+import rs117.hd.renderer.zone.ZoneRenderer;
+
 import static org.lwjgl.opengl.GL33C.*;
 
 public class ParticleShaderProgram extends ShaderProgram {
 	// Texture units for tiered particle textures
-	// Must not conflict with scene texture units (0-5 are used by HdPlugin and ZoneRenderer)
-	public static final int TEXTURE_UNIT_PARTICLE_64 = 6;
-	public static final int TEXTURE_UNIT_PARTICLE_128 = 7;
-	public static final int TEXTURE_UNIT_PARTICLE_256 = 8;
-	public static final int TEXTURE_UNIT_PARTICLE_1024 = 9;
+	// Reserve units after the scene textures, including the terrain shadows and nebula map.
+	public static final int TEXTURE_UNIT_PARTICLE_64 = ZoneRenderer.TEXTURE_UNIT_TEXTURED_FACES - GL_TEXTURE0 + 1;
+	public static final int TEXTURE_UNIT_PARTICLE_128 = TEXTURE_UNIT_PARTICLE_64 + 1;
+	public static final int TEXTURE_UNIT_PARTICLE_256 = TEXTURE_UNIT_PARTICLE_64 + 2;
+	public static final int TEXTURE_UNIT_PARTICLE_1024 = TEXTURE_UNIT_PARTICLE_64 + 3;
 
 	private final UniformMat4 uniProjection = addUniformMat4("uProjection");
 	private final UniformMat4 uniView = addUniformMat4("uView");
